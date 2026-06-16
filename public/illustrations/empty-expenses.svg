@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="expensesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="expensesIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="50" fill="url(#expensesGrad)" />
+  <rect x="30" y="40" width="60" height="40" rx="6" fill="url(#expensesGrad)" stroke="url(#expensesIconGrad)" stroke-width="3" />
+  <circle cx="60" cy="60" r="8" fill="none" stroke="url(#expensesIconGrad)" stroke-width="3" />
+  <path d="M45 50h5M70 50h5M45 70h5M70 70h5" fill="none" stroke="url(#expensesIconGrad)" stroke-width="2" stroke-linecap="round" />
+  <path d="M40 30h40a10 10 0 0 1 10 10" fill="none" stroke="url(#expensesIconGrad)" stroke-width="3" stroke-linecap="round" />
+  <path d="M30 50v-10a10 10 0 0 1 10-10" fill="none" stroke="url(#expensesIconGrad)" stroke-width="3" stroke-linecap="round" />
+</svg>

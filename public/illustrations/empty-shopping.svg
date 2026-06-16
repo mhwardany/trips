@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="shoppingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="shoppingIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="50" fill="url(#shoppingGrad)" />
+  <circle cx="60" cy="60" r="35" fill="none" stroke="url(#shoppingGrad)" stroke-width="2" stroke-dasharray="4 4" />
+  <path d="M40 50h40l-4 30H44z" fill="url(#shoppingGrad)" stroke="url(#shoppingIconGrad)" stroke-width="3" stroke-linejoin="round" />
+  <path d="M48 50v-8a12 12 0 0 1 24 0v8" fill="none" stroke="url(#shoppingIconGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50" cy="62" r="2" fill="url(#shoppingIconGrad)" />
+  <circle cx="70" cy="62" r="2" fill="url(#shoppingIconGrad)" />
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="chkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#34D399" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="chkIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="50" fill="url(#chkGrad)" />
+  <rect x="35" y="30" width="50" height="60" rx="6" fill="url(#chkGrad)" stroke="url(#chkIconGrad)" stroke-width="3" /><path d="M45 45l5 5 10-10M45 65l5 5 10-10" fill="none" stroke="url(#chkIconGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
