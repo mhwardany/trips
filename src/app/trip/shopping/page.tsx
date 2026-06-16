@@ -61,18 +61,21 @@ export default function ShoppingPage() {
         ...pendingReqs.map(r => ({
           id: 'REQ_' + r.id, trip_id: r.trip_id,
           request_id: r.id, item: r.item_name, qty: 1,
+          currency: trip?.base_currency || 'EGP', actual_currency: trip?.currency_code || 'USD',
           requester: r.requester_name, requester_whatsapp: r.requester_whatsapp,
           is_virtual: true, source: 'request', requester_user_id: r.requester_user_id, profile_id: r.profile_id
         } as unknown as ShoppingItem)),
         ...pendingOrders.map(co => ({
           id: 'ORD_' + co.id, trip_id: co.trip_id,
           client_order_id: co.id, item: co.item_name, qty: 1,
+          currency: trip?.base_currency || 'EGP', actual_currency: trip?.currency_code || 'USD',
           requester: co.customer_name, requester_whatsapp: co.customer_whatsapp,
           is_virtual: true, source: 'order'
         } as unknown as ShoppingItem)),
         ...pendingGifts.map(g => ({
           id: 'GFT_' + g.id, trip_id: g.trip_id,
           gift_id: g.id, item: g.item, qty: g.qty, est_price: g.est_cost,
+          currency: trip?.base_currency || 'EGP', actual_currency: trip?.currency_code || 'USD',
           requester: g.recipient || g.requested_by, requester_whatsapp: '',
           group_name: 'Gifts',
           is_virtual: true, source: 'gift'
