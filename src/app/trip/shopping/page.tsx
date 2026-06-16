@@ -109,9 +109,25 @@ export default function ShoppingPage() {
     const isPurchased = form.actual_price !== '';
     const payload = editing ? { id: editing.id, patch: { ...form, purchased: isPurchased } } : { ...form, trip_id: trip!.id, purchased: isPurchased };
     
+    // Optimistic Update
+    const tempId = editing ? editing.id : `TEMP_${Date.now()}`;
+    const optItem = editing ? { ...editing, ...form, purchased: isPurchased } : { ...form, id: tempId, trip_id: trip!.id, purchased: isPurchased } as unknown as ShoppingItem;
+    setItems(prev => editing ? prev.map(i => i.id === editing.id ? optItem : i) : [...prev, optItem]);
+    setModal(false);
+
     const res = await api(editing ? 'shopping.update' : 'shopping.create', payload);
     setIsSaving(false);
-    if (res.ok) { showToast(t('save') + ' ✓'); setModal(false); void load(); }
+    if (res.ok) { 
+      showToast(t('save') + ' ✓'); 
+      if (res.data && res.data.id && !editing) {
+        setItems(prev => prev.map(i => i.id === tempId ? { ...optItem, ...res.data } : i));
+      }
+      setTimeout(() => void load(), 2000); 
+    } else {
+      showToast(res.error?.message || 'Error', 'error');
+      // Revert on failure
+      void load();
+    }
   };
 
   const confirmPurchase = async () => {

@@ -74,28 +74,53 @@ export default function CrudScreen({ entity, listEndpoint, titleKey, titleIcon, 
     const payload: Record<string, unknown> = editing
       ? { id: editing.id, patch: form }
       : { ...form, ...(tripScoped && trip ? { trip_id: trip.id } : {}) };
+
+    // Optimistic Update
+    const tempId = editing ? editing.id : `TEMP_${Date.now()}`;
+    const optItem = editing ? { ...editing, ...form } : { ...form, id: tempId, ...(tripScoped && trip ? { trip_id: trip.id } : {}) } as unknown as GenericRecord;
+    setItems(prev => editing ? prev.map(i => i.id === editing.id ? optItem : i) : [...prev, optItem]);
+
+    if (keepOpen === true && !editing) {
+      setForm(prev => ({ ...prev, [fields[0].key]: '' }));
+      setTimeout(() => document.getElementById('quick-add-input')?.focus(), 50);
+    } else {
+      setModal(false); 
+    }
+
     const res = await api(editing ? `${entity}.update` : `${entity}.create`, payload);
     setIsSaving(false);
     if (res.ok) { 
       showToast(t('save') + ' ✓'); 
-      if (keepOpen === true && !editing) {
-        setForm(prev => ({ ...prev, [fields[0].key]: '' }));
-        setTimeout(() => document.getElementById('quick-add-input')?.focus(), 50);
-      } else {
-        setModal(false); 
+      if (res.data && (res.data as any).id && !editing) {
+        setItems(prev => prev.map(i => i.id === tempId ? { ...optItem, ...(res.data as GenericRecord) } : i));
       }
-      void load(); 
+      setTimeout(() => void load(), 2000); 
     }
-    else showToast(res.error?.message || 'Error', 'error');
+    else {
+      showToast(res.error?.message || 'Error', 'error');
+      void load();
+    }
   };
 
   const del = async () => {
     if (!deleteId) return;
     setIsDeleting(true);
-    const res = await api(`${entity}.delete`, { id: deleteId });
-    setIsDeleting(false);
-    if (res.ok) { showToast(t('delete') + ' ✓'); void load(); }
+    
+    // Optimistic Delete
+    setItems(prev => prev.filter(i => i.id !== deleteId));
+    const cachedDeleteId = deleteId;
     setDeleteId(null);
+    setModal(false);
+
+    const res = await api(`${entity}.delete`, { id: cachedDeleteId });
+    setIsDeleting(false);
+    if (res.ok) { 
+      showToast(t('delete') + ' ✓'); 
+      setTimeout(() => void load(), 2000); 
+    } else {
+      showToast(res.error?.message || 'Error', 'error');
+      void load();
+    }
   };
 
   const renderField = (f: FieldDef) => {
