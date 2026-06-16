@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { Check, MessageCircle, Save, ShoppingBag, ShoppingCart, Store, Trash2, Truck, Users, PlusCircle } from 'lucide-react';
+import { Check, MessageCircle, Save, ShoppingBag, ShoppingCart, Store, Trash2, Truck, Users, PlusCircle, Boxes } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
