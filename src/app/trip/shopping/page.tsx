@@ -362,6 +362,15 @@ export default function ShoppingPage() {
           </Field>
           <Field label={t('notes_field')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} rows={2} /></Field>
           <Button onClick={save} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>
+          {editing && (isTrue(editing.purchased) || isTrue(editing.in_cart)) && (
+            <Button variant="secondary" onClick={() => {
+              setItems(prev => prev.map(i => i.id === editing.id ? { ...i, purchased: false, in_cart: false, delivered: false } as ShoppingItem : i));
+              setModal(false);
+              api('shopping.update', { id: editing.id, patch: { purchased: false, in_cart: false, delivered: false } }).then(() => void load());
+            }} disabled={isSaving} className="w-full">
+              <Boxes size={16} /> Return to Wishlist
+            </Button>
+          )}
           {editing && <Button variant="danger" onClick={() => { setModal(false); setDeleteId(editing.id); }} disabled={isSaving} className="w-full"><Trash2 size={16} />{t('delete')}</Button>}
           {editingVirtual && <Button variant="danger" onClick={() => { setModal(false); setDeleteId(editingVirtual.id); }} disabled={isSaving} className="w-full bg-zinc-900 text-rose-500 border border-rose-500/30"><Trash2 size={16} />Remove Request from List</Button>}
         </div>

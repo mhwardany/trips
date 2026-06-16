@@ -104,17 +104,20 @@ export default function DashboardPage() {
         {[
           { Icon: PlaneTakeoff, label: t('days_to_departure'), value: w.days_to_departure, color: 'ocean' as JoyColor },
           { Icon: PlaneLanding, label: t('days_to_return'), value: w.days_to_return, color: 'sunset' as JoyColor },
-          { Icon: Boxes, label: t('open_requests'), value: w.open_requests, color: 'amethyst' as JoyColor },
-          ...(role !== 'family' ? [{ Icon: Gift, label: t('gifts_purchased'), value: `${w.gifts_purchased}/${w.gifts_total}`, color: 'coral' as JoyColor }] : [])
-        ].map(({ Icon, label, value, color }, i) => (
-          <Card key={i} flat className="flex items-center gap-3 !p-3">
-            <JoyIcon icon={Icon} color={color} size="md" />
-            <span>
-              <span className="block font-display text-[22px] leading-none text-gray-800 dark:text-gray-100">{value}</span>
-              <span className="block text-[10px] text-zinc-500 mt-1">{label}</span>
-            </span>
-          </Card>
-        ))}
+          { Icon: Boxes, label: t('open_requests'), value: w.open_requests, color: 'amethyst' as JoyColor, href: '/trip/requests/' },
+          ...(role !== 'family' ? [{ Icon: Gift, label: t('gifts_purchased'), value: `${w.gifts_purchased}/${w.gifts_total}`, color: 'coral' as JoyColor, href: '/trip/gifts/' }] : [])
+        ].map(({ Icon, label, value, color, href }, i) => {
+          const content = (
+            <Card flat className="flex items-center gap-3 !p-3 h-full">
+              <JoyIcon icon={Icon} color={color} size="md" />
+              <span>
+                <span className="block font-display text-[22px] leading-none text-gray-800 dark:text-gray-100">{value}</span>
+                <span className="block text-[10px] text-zinc-500 mt-1">{label}</span>
+              </span>
+            </Card>
+          );
+          return href ? <Link key={i} href={href} className="block">{content}</Link> : <div key={i}>{content}</div>;
+        })}
       </div>
 
       {/* progress strips */}
