@@ -122,8 +122,8 @@ export default function ShoppingPage() {
     setIsSaving(false);
     if (res.ok) { 
       showToast(t('save') + ' ✓'); 
-      if (res.data && res.data.id && !editing) {
-        setItems(prev => prev.map(i => i.id === tempId ? { ...optItem, ...res.data } : i));
+      if (res.data && (res.data as any).id && !editing) {
+        setItems(prev => prev.map(i => i.id === tempId ? { ...optItem, ...(res.data as any) } : i));
       }
       setTimeout(() => void load(), 2000); 
     } else {
