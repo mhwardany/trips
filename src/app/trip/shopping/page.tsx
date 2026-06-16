@@ -363,11 +363,11 @@ export default function ShoppingPage() {
           <Field label={t('notes_field')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} rows={2} /></Field>
           <Button onClick={save} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>
           {editing && (isTrue(editing.purchased) || isTrue(editing.in_cart)) && (
-            <Button variant="secondary" onClick={() => {
+            <Button variant="ghost" onClick={() => {
               setItems(prev => prev.map(i => i.id === editing.id ? { ...i, purchased: false, in_cart: false, delivered: false } as ShoppingItem : i));
               setModal(false);
               api('shopping.update', { id: editing.id, patch: { purchased: false, in_cart: false, delivered: false } }).then(() => void load());
-            }} disabled={isSaving} className="w-full">
+            }} disabled={isSaving} className="w-full bg-zinc-800 text-white">
               <Boxes size={16} /> Return to Wishlist
             </Button>
           )}
