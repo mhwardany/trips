@@ -77,7 +77,7 @@ export default function CrudScreen({ entity, listEndpoint, titleKey, titleIcon, 
 
     // Optimistic Update
     const tempId = editing ? editing.id : `TEMP_${Date.now()}`;
-    const optItem = editing ? { ...editing, ...form } : { ...form, id: tempId, ...(tripScoped && trip ? { trip_id: trip.id } : {}) } as unknown as GenericRecord;
+    const optItem = (editing ? { ...editing, ...form } : { ...form, id: tempId, ...(tripScoped && trip ? { trip_id: trip.id } : {}) }) as unknown as GenericRecord;
     setItems(prev => editing ? prev.map(i => i.id === editing.id ? optItem : i) : [...prev, optItem]);
 
     if (keepOpen === true && !editing) {

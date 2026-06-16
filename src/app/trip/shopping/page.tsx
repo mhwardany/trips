@@ -114,7 +114,7 @@ export default function ShoppingPage() {
     
     // Optimistic Update
     const tempId = editing ? editing.id : `TEMP_${Date.now()}`;
-    const optItem = editing ? { ...editing, ...form, purchased: isPurchased } : { ...form, id: tempId, trip_id: trip!.id, purchased: isPurchased } as unknown as ShoppingItem;
+    const optItem = (editing ? { ...editing, ...form, purchased: isPurchased } : { ...form, id: tempId, trip_id: trip!.id, purchased: isPurchased }) as unknown as ShoppingItem;
     setItems(prev => editing ? prev.map(i => i.id === editing.id ? optItem : i) : [...prev, optItem]);
     setModal(false);
 
