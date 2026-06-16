@@ -26,7 +26,7 @@ interface Props {
   titleKey: string;
   titleIcon?: ReactNode;
   fields: FieldDef[];
-  renderItem: (item: GenericRecord, actions: { edit: () => void; del: () => void; refresh: () => void }) => ReactNode;
+  renderItem: (item: GenericRecord, actions: { edit: () => void; del: () => void; refresh: () => void; update: (item: GenericRecord) => void }) => ReactNode;
   tripScoped?: boolean;
   defaultValues?: Record<string, unknown>;
   headerExtra?: ReactNode;
@@ -173,8 +173,13 @@ export default function CrudScreen({ entity, listEndpoint, titleKey, titleIcon, 
       {loading ? <ListSkeleton /> : items.length === 0 ? <EmptyState imageSrc={emptyStateImage || "/illustrations/empty-generic.svg"} /> : (
         <div className="space-y-2.5">
           {items.map((item, i) => (
-            <div key={item.id} className={i < 4 ? `rise rise-${i + 1}` : ''}>
-              {renderItem(item, { edit: () => openEdit(item), del: () => setDeleteId(item.id), refresh: () => void load() })}
+            <div key={item.id} className={i < 4 ? `rise rise-${i + 1}` : 'fade-in'}>
+              {renderItem(item, { 
+                edit: () => openEdit(item), 
+                del: () => { setDeleteId(item.id); setModal(true); }, 
+                refresh: () => void load(),
+                update: (updatedItem: GenericRecord) => setItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i))
+              })}
             </div>
           ))}
         </div>

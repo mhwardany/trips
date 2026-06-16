@@ -55,9 +55,11 @@ export default function PackingPage() {
               type="button"
               onClick={async (e) => {
                 e.stopPropagation();
-                // Optimistic UI could be added here, but a quick refresh is fine for now
-                await api('packing.update', { id: p.id, patch: { status: isPacked ? 'missing' : 'packed' } });
-                a.refresh();
+                const newStatus = isPacked ? 'missing' : 'packed';
+                a.update({ ...p, status: newStatus });
+                api('packing.update', { id: p.id, patch: { status: newStatus } }).then(res => {
+                  if (!res.ok) a.refresh(); // revert if failed
+                });
               }}
               className={`shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isPacked ? 'bg-green-500 border-green-500 text-white' : 'border-zinc-500 text-transparent hover:border-zinc-400'}`}
             >
