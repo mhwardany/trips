@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MapPin, Save, Star, Trash2, UtensilsCrossed, Coffee, Building2, Landmark } from 'lucide-react';
+import { MapPin, Save, Star, Trash2, UtensilsCrossed, Coffee, Building2, Landmark, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -30,7 +30,7 @@ export default function PlacesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [picked, setPicked] = useState<{ lat: number; lng: number } | null>(null);
-  const [form, setForm] = useState({ name: '', category: 'attractions', rating: 0, notes: '' });
+  const [form, setForm] = useState({ name: '', category: 'attractions', rating: 0, notes: '', map_url: '' });
 
   const load = useCallback(async () => {
     if (!trip) return;
@@ -49,7 +49,7 @@ export default function PlacesPage() {
       if (cancelled || !mapRef.current) return;
       const map = L.map(mapRef.current, { zoomControl: false }).setView([29.3759, 47.9774], 11);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© OSM © CARTO', maxZoom: 19 }).addTo(map);
-      map.on('click', (e: import('leaflet').LeafletMouseEvent) => { setPicked({ lat: e.latlng.lat, lng: e.latlng.lng }); setEditing(null); setForm({ name: '', category: 'attractions', rating: 0, notes: '' }); setModal(true); });
+      map.on('click', (e: import('leaflet').LeafletMouseEvent) => { setPicked({ lat: e.latlng.lat, lng: e.latlng.lng }); setEditing(null); setForm({ name: '', category: 'attractions', rating: 0, notes: '', map_url: '' }); setModal(true); });
       mapInstance.current = map;
     })();
     return () => { cancelled = true; mapInstance.current?.remove(); mapInstance.current = null; };
@@ -89,6 +89,13 @@ export default function PlacesPage() {
     } 
   };
 
+  const openCreate = () => {
+    setPicked(null);
+    setEditing(null);
+    setForm({ name: '', category: 'attractions', rating: 0, notes: '', map_url: '' });
+    setModal(true);
+  };
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-3 rise">
@@ -102,31 +109,40 @@ export default function PlacesPage() {
           {items.map((p) => {
             const opt = CAT_OPTS.find((o) => o.value === p.category);
             return (
-              <Card key={p.id} flat className="!p-3.5"
-                onClick={() => { setEditing(p); setForm({ name: String(p.name), category: String(p.category), rating: Number(p.rating) || 0, notes: String(p.notes) }); setModal(true); }}>
-                <div className="flex items-center gap-3">
-                  <span className="icon-tile">{opt?.icon || <MapPin size={16} />}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] text-foreground truncate">{String(p.name)}</p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5 capitalize">{String(p.category)}</p>
+              <Card key={p.id} flat className="!p-3.5">
+                <div className="flex items-center gap-3" onClick={() => { setEditing(p); setForm({ name: String(p.name||''), category: String(p.category||'attractions'), rating: Number(p.rating||0), notes: String(p.notes||''), map_url: String(p.map_url||'') }); setModal(true); }}>
+                  <div className="w-10 h-10 rounded-full bg-zinc-800/50 flex items-center justify-center text-royal-gold shrink-0">
+                    {opt?.icon || <MapPin size={18} />}
                   </div>
-                  <p className="flex gap-0.5">
-                    {[1,2,3,4,5].map((n) => <Star key={n} size={12} className={n <= Number(p.rating) ? 'text-royal-gold' : 'text-zinc-700'} fill={n <= Number(p.rating) ? '#2563EB' : 'none'} />)}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] text-foreground font-semibold truncate">{String(p.name)}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {Number(p.rating) > 0 && <span className="flex items-center text-[11px] text-amber-400 font-medium"><Star size={10} className="fill-amber-400 mr-0.5" />{p.rating}</span>}
+                      {String(p.notes) && <span className="text-[11px] text-zinc-500 truncate max-w-[120px]">{String(p.notes)}</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    {(Boolean(p.map_url) || (Number(p.lat) && Number(p.lng))) && (
+                      <button onClick={(e) => { e.stopPropagation(); window.open(String(p.map_url) || `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`, '_blank'); }} className="icon-tile !w-8 !h-8 !bg-zinc-800">
+                        <ExternalLink size={14} className="text-royal-gold" />
+                      </button>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }} className="icon-tile !w-8 !h-8 !text-red-400 !bg-red-500/10"><Trash2 size={14} /></button>
+                  </div>
                 </div>
               </Card>
             );
           })}
         </div>
       )}
-      <Fab onClick={() => { setEditing(null); setPicked(null); setForm({ name: '', category: 'attractions', rating: 0, notes: '' }); setModal(true); }} />
+      <Fab onClick={openCreate} />
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
-          {picked && <p className="text-[11px] text-royal-goldsoft flex items-center gap-1"><MapPin size={12} />{picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}</p>}
-          <Field label={t('name')}><Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} /></Field>
+          <Field label={t('name')}><Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} autoFocus /></Field>
+          <Field label="Google Maps Link (Optional)"><Input value={form.map_url} onChange={(v) => setForm({ ...form, map_url: v })} placeholder="https://goo.gl/maps/..." /></Field>
           <Field label={t('category')}><ChipGroup value={form.category} onChange={(v) => setForm({ ...form, category: v })} options={CAT_OPTS} /></Field>
-          <Field label={t('rating')}><StarRating value={form.rating} onChange={(n) => setForm({ ...form, rating: n })} /></Field>
-          <Field label={t('notes_field')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} rows={2} /></Field>
+          <Field label={t('rating')}><div className="flex justify-center py-2"><StarRating value={form.rating} onChange={(v) => setForm({ ...form, rating: v })} /></div></Field>
+          <Field label={t('notes')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} /></Field>
           <Button onClick={save} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>
           {editing && <Button variant="danger" onClick={() => { setModal(false); setDeleteId(editing.id); }} disabled={isSaving} className="w-full"><Trash2 size={16} />{t('delete')}</Button>}
         </div>
