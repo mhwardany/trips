@@ -1,5 +1,5 @@
-import { safeExternalUrl } from '@/lib/utils';
 'use client';
+import { safeExternalUrl } from '@/lib/utils';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Boxes, Camera, Flag, Link2, Save, MessageCircle, Trash2 } from 'lucide-react';
 import { api, compressImage } from '@/lib/api';
