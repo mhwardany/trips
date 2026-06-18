@@ -7,6 +7,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { GenericRecord } from '@/types';
 import { Badge, Button, Card, ChipGroup, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, Spinner, ListSkeleton } from '@/components/ui/Primitives';
+import { VirtualList } from '@/components/ui/VirtualList';
 
 const DOC_OPTS = [
   { value: 'passport', label: 'Passport', icon: <BookUser size={14} /> },
@@ -75,11 +76,13 @@ export default function DocumentsPage() {
       </div>
       <p className="text-[11px] text-zinc-500 mb-4 ps-1 rise rise-1">Secure links expire after 30 minutes.</p>
       {loading ? <ListSkeleton /> : items.length === 0 ? <EmptyState imageSrc="/illustrations/empty-documents.svg" /> : (
-        <div className="space-y-2.5">
-          {items.map((d) => {
+        <VirtualList
+          items={items}
+          keyExtractor={(d) => d.id}
+          renderItem={(d) => {
             const opt = DOC_OPTS.find((o) => o.value === d.type);
             return (
-              <Card key={d.id} flat className="!p-3.5">
+              <Card flat className="!p-3.5 mb-2">
                 <div className="flex items-center gap-3">
                   <span className="icon-tile">{opt?.icon || <FileText size={16} />}</span>
                   <div className="flex-1 min-w-0">
@@ -96,8 +99,8 @@ export default function DocumentsPage() {
                 </div>
               </Card>
             );
-          })}
-        </div>
+          }}
+        />
       )}
       <Fab onClick={() => { setForm({ title: '', type: 'passport', expiry_date: '' }); setPendingFile(null); setModal(true); }} />
       <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={(e) => setPendingFile(e.target.files?.[0] || null)} />

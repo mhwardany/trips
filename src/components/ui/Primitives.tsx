@@ -113,16 +113,19 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('skeleton', className)} />;
 }
 
-export function Fab({ onClick }: { onClick: () => void }) {
+export function Fab({ onClick, extraAction }: { onClick: () => void; extraAction?: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   return createPortal(
-    <button onClick={onClick} aria-label="Add"
-      className="btn-gold !w-[60px] !h-[60px] !p-0 !rounded-[22px] !fixed z-[60] flex items-center justify-center bottom-[100px] right-6 lg:right-[calc(50%-19rem)]">
-      <Plus size={28} strokeWidth={2.5} className="text-white" />
-    </button>,
+    <div className="fixed z-[60] bottom-[100px] right-6 lg:right-[calc(50%-19rem)] flex flex-col items-center gap-3">
+      {extraAction}
+      <button onClick={onClick} aria-label="Add"
+        className="btn-gold !w-[60px] !h-[60px] !p-0 !rounded-[22px] flex items-center justify-center shadow-[0_8px_32px_rgba(212,175,55,0.4)] hover:scale-105 active:scale-95 transition-transform">
+        <Plus size={28} strokeWidth={2.5} className="text-white" />
+      </button>
+    </div>,
     document.body
   );
 }

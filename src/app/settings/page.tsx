@@ -58,6 +58,17 @@ export default function SettingsPage() {
         </Card>
 
         <Card className="space-y-4 rise rise-2">
+          <p className="text-[12px] gold-text font-semibold flex items-center gap-1.5"><ShieldCheck size={13} /> Notifications (Beta)</p>
+          <p className="text-[11px] text-zinc-400">Get notified when there are updates or requests.</p>
+          <Button variant="ghost" className="w-full text-xs" onClick={async () => {
+            const { requestPushPermission } = await import('@/lib/push');
+            const granted = await requestPushPermission();
+            if (granted) showToast('Push enabled ✓', 'success');
+            else showToast('Push not supported or denied', 'error');
+          }}>Enable Push Notifications</Button>
+        </Card>
+
+        <Card className="space-y-4 rise rise-3">
           <p className="text-[12px] gold-text font-semibold flex items-center gap-1.5"><ShieldCheck size={13} />{t('change_pin')}</p>
           <Field label={t('current_pin')}>
             <Input type="password" inputMode="numeric" maxLength={6} value={currentPin} onChange={setCurrentPin} icon={<KeyRound size={15} />} />

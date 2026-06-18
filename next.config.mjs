@@ -15,14 +15,21 @@ const withPWA = withPWAInit({
         handler: 'NetworkOnly'
       }
     ]
-  }
+  },
+  customWorkerDir: 'worker'
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  images: { unoptimized: true },
-  trailingSlash: true
+  reactStrictMode: true,
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    return config;
+  }
 };
 
 export default withPWA(nextConfig);

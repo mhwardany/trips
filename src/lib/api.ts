@@ -22,10 +22,10 @@ async function postJson<T>(action: string, payload: Record<string, unknown>): Pr
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    // text/plain avoids CORS preflight against Google Apps Script
-    const res = await fetch(GAS_URL, {
+    // Forward everything to our secure proxy API
+    const res = await fetch('/api/proxy', {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body,
       signal: controller.signal,
     });
@@ -82,6 +82,30 @@ export async function compressImage(file: File): Promise<{ base64: string; mime:
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+  if (file.type === 'application/pdf') {
+    try {
+      const pdfjs = await import('pdfjs-dist');
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d')!;
+      
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const out = canvas.toDataURL('image/jpeg', 0.9);
+      return { base64: out.split(',')[1], mime: 'image/jpeg' };
+    } catch (e) {
+      console.error('PDF to Image conversion failed', e);
+      return { base64: dataUrl.split(',')[1], mime: 'application/pdf' }; // Fallback to raw PDF
+    }
+  }
+
   if (!file.type.startsWith('image/')) return { base64: dataUrl.split(',')[1], mime: file.type };
 
   const img = document.createElement('img');

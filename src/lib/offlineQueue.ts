@@ -10,6 +10,15 @@ const AUTH_ERROR_CODES = ['AUTH_REQUIRED', 'UNAUTHORIZED'];
 export async function enqueue(item: QueueItem): Promise<void> {
   await idbPut('queue', item);
   useSyncStore.getState().refreshCount();
+  
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && 'SyncManager' in window) {
+    try {
+      const sw = await navigator.serviceWorker.ready;
+      await (sw as any).sync.register('sync-offline-queue');
+    } catch (e) {
+      console.error('Background Sync registration failed', e);
+    }
+  }
 }
 
 export async function pendingCount(): Promise<number> {
@@ -81,5 +90,15 @@ export async function failedItems(): Promise<unknown[]> {
 export function initSyncListeners(): void {
   if (typeof window === 'undefined') return;
   window.addEventListener('online', () => { void syncQueue(); });
+  
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'SYNC_COMPLETE') {
+        useSyncStore.getState().refreshCount();
+        void import('@/stores/uiStore').then(m => m.useUiStore.getState().showToast('Background sync complete ✓', 'success'));
+      }
+    });
+  }
+
   void syncQueue(); // iOS Safari: sync on app open
 }

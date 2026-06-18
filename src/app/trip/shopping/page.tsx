@@ -341,11 +341,15 @@ export default function ShoppingPage() {
         </div>
       )}
       
-      <button onClick={() => router.push('/trip/scanner/')} 
-        className="fixed bottom-[175px] right-[28px] lg:right-[calc(50%-18.5rem)] w-[50px] h-[50px] bg-zinc-900 border border-royal-gold/40 rounded-[18px] z-50 flex items-center justify-center text-royal-gold shadow-[0_8px_32px_rgba(212,175,55,0.15)] active:scale-95 transition backdrop-blur-md">
-        <ScanLine size={22} />
-      </button>
-      <Fab onClick={openCreate} />
+      <Fab 
+        onClick={openCreate} 
+        extraAction={
+          <button onClick={() => router.push('/trip/scanner/')} 
+            className="w-[50px] h-[50px] bg-zinc-900 border border-royal-gold/40 rounded-[18px] flex items-center justify-center text-royal-gold shadow-[0_8px_32px_rgba(212,175,55,0.15)] active:scale-95 transition backdrop-blur-md">
+            <ScanLine size={22} />
+          </button>
+        } 
+      />
       
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
