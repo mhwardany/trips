@@ -11,7 +11,8 @@ import { Button, Card, Field, Input, Segmented } from '@/components/ui/Primitive
 export default function SettingsPage() {
   const t = useT();
   const { lang, setLang, showToast } = useUiStore();
-  const { user, setAuth, token, role } = useAuthStore();
+  const { user, setAuth, token } = useAuthStore();
+  const role = user?.role;
   
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
