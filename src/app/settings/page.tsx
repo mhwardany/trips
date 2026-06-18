@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Globe, KeyRound, Save, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { Bot, Globe, KeyRound, Save, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -11,7 +11,7 @@ import { Button, Card, Field, Input, Segmented } from '@/components/ui/Primitive
 export default function SettingsPage() {
   const t = useT();
   const { lang, setLang, showToast } = useUiStore();
-  const { user, setAuth, token } = useAuthStore();
+  const { user, setAuth, token, role } = useAuthStore();
   
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
@@ -19,6 +19,16 @@ export default function SettingsPage() {
   
   const [whatsapp, setWhatsapp] = useState((user as any)?.whatsapp || '');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  
+  const [geminiKey, setGeminiKey] = useState('');
+  
+  const saveGeminiKey = async () => {
+    setIsSaving(true);
+    const res = await api('settings.setKey', { key: geminiKey });
+    setIsSaving(false);
+    if (res.ok) { showToast(t('save') + ' ✓'); setGeminiKey(''); }
+    else showToast(res.error?.message || 'Error', 'error');
+  };
 
   const changePin = async () => {
     if (newPin.length !== 6) { showToast(t('new_pin') + ' = 6', 'error'); return; }
@@ -67,6 +77,17 @@ export default function SettingsPage() {
             else showToast('Push not supported or denied', 'error');
           }}>Enable Push Notifications</Button>
         </Card>
+
+        {role === 'owner' && (
+          <Card className="space-y-4 rise rise-2">
+            <p className="text-[12px] gold-text font-semibold flex items-center gap-1.5"><Bot size={13} /> Gemini AI Settings</p>
+            <p className="text-[11px] text-zinc-400">Add a Gemini API key to enable Smart OCR for receipt line items.</p>
+            <Field label="Gemini API Key">
+              <Input type="password" value={geminiKey} onChange={setGeminiKey} icon={<KeyRound size={15} />} placeholder="AIzaSy..." />
+            </Field>
+            <Button onClick={saveGeminiKey} isLoading={isSaving} className="w-full" variant="secondary">Save API Key</Button>
+          </Card>
+        )}
 
         <Card className="space-y-4 rise rise-3">
           <p className="text-[12px] gold-text font-semibold flex items-center gap-1.5"><ShieldCheck size={13} />{t('change_pin')}</p>

@@ -84,11 +84,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <header className="px-5 pt-6 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           {pathname !== '/trip/' && pathname !== '/trips/' && (
-            <button onClick={() => router.back()} className="p-1 -ml-2 text-zinc-400 hover:text-white transition active:scale-95 shrink-0">
+            <button onClick={() => {
+              if (window.history.length > 2) router.back();
+              else router.push('/trip/');
+            }} className="p-1 -ml-2 text-zinc-400 hover:text-white transition active:scale-95 shrink-0">
               {lang === 'ar' ? <ChevronRight size={26} /> : <ChevronLeft size={26} />}
             </button>
           )}
-          <Link href="/trips/" className="min-w-0">
+          <Link href={trip ? "/trip/" : "/trips/"} className="min-w-0">
             {trip ? (
               <>
                 <p className="font-display text-[17px] gold-text truncate leading-tight">{trip.name}</p>

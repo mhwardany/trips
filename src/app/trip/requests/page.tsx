@@ -171,7 +171,10 @@ export default function RequestsPage() {
           <Button variant="ghost" onClick={() => fileRef.current?.click()} className="w-full">
             <Camera size={17} />{imageB64 ? '✓ ' + imageB64.name.slice(0, 24) : t('upload_image')}
           </Button>
-          <Button onClick={create} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setModal(false)} className="flex-1">{t('cancel') || 'Cancel'}</Button>
+            <Button onClick={create} isLoading={isSaving} className="flex-[2]"><Save size={17} />{t('save')}</Button>
+          </div>
         </div>
       </Modal>
       <Modal open={!!statusFor} onClose={() => setStatusFor(null)} title={statusFor?.item_name || ''}>

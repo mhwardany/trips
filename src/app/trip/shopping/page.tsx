@@ -373,7 +373,10 @@ export default function ShoppingPage() {
             <StorePicker title={t('store')} value={form.store} onChange={(v) => setForm({ ...form, store: v })} />
           </Field>
           <Field label={t('notes_field')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} rows={2} /></Field>
-          <Button onClick={save} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setModal(false)} className="flex-1">{t('cancel') || 'Cancel'}</Button>
+            <Button onClick={save} isLoading={isSaving} className="flex-[2]"><Save size={17} />{t('save')}</Button>
+          </div>
           {editing && (isTrue(editing.purchased) || isTrue(editing.in_cart)) && (
             <Button variant="ghost" onClick={() => {
               setItems(prev => prev.map(i => i.id === editing.id ? { ...i, purchased: false, in_cart: false, delivered: false } as ShoppingItem : i));

@@ -25,6 +25,8 @@ export default function ScannerPage() {
   const [form, setForm] = useState({ store: '', amount: '', currency: '', date: todayIso(), category: 'food', item_name: 'Purchases', group_name: '' });
   const [saveType, setSaveType] = useState<'expense' | 'shopping'>('expense');
 
+  const [ocrItems, setOcrItems] = useState<any[]>([]);
+
   const groups = trip?.contacts ? trip.contacts.split(',').map(c => c.trim()).filter(Boolean) : [];
   const groupOpts = [{ value: '', label: 'Personal (Default)' }, ...groups.map(g => ({ value: g, label: g })), { value: 'Other', label: 'Other' }];
 
@@ -36,7 +38,7 @@ export default function ScannerPage() {
     const up = await api<{ receipt_id: string, file_id: string }>('receipts.upload', { trip_id: trip.id, filename: file.name, mime, base64 });
     if (!up.ok || !up.data) { showToast(up.error?.message || 'Upload failed', 'error'); setBusy(''); return; }
     setBusy('ocr');
-    const ocr = await api<ReceiptDraft>('receipts.ocr', { receipt_id: up.data.receipt_id });
+    const ocr = await api<ReceiptDraft & { raw_text?: string }>('receipts.ocr', { receipt_id: up.data.receipt_id });
     setBusy('');
     if (ocr.ok && ocr.data) {
       setDraft({ ...ocr.data, receipt_id: up.data.receipt_id, file_id: up.data.file_id });
@@ -46,6 +48,16 @@ export default function ScannerPage() {
         currency: String(ocr.data.ocr_currency || trip.currency_code),
         date: String(ocr.data.ocr_date || todayIso()).slice(0, 10), category: 'food'
       });
+      try {
+        if (ocr.data.raw_text && (ocr.data.raw_text.startsWith('[') || ocr.data.raw_text.startsWith('{'))) {
+          const parsed = JSON.parse(ocr.data.raw_text);
+          const items = Array.isArray(parsed) ? parsed : (parsed.items || []);
+          if (items.length > 0) {
+            setOcrItems(items);
+            setSaveType('shopping');
+          }
+        }
+      } catch(e) {}
     } else {
       setDraft({ receipt_id: up.data.receipt_id, file_id: up.data.file_id });
       setForm({ ...form, store: '', amount: '', currency: trip.currency_code, date: todayIso(), category: 'food' });
@@ -60,14 +72,23 @@ export default function ScannerPage() {
     if (saveType === 'expense') {
       res = await api('receipts.toExpense', { receipt_id: draft.receipt_id, ...form });
     } else {
-      res = await api('shopping.create', { 
-        trip_id: trip!.id, item: form.item_name || 'Purchases', store: form.store,
-        est_price: form.amount, actual_price: form.amount, currency: form.currency, actual_currency: form.currency,
-        group_name: form.group_name || 'Personal', purchased: true, photo_file_id: draft.file_id || ''
-      });
+      if (ocrItems.length > 0) {
+        await Promise.all(ocrItems.map(item => api('shopping.create', { 
+          trip_id: trip!.id, item: item.item || form.item_name || 'Purchases', store: form.store,
+          est_price: item.price, actual_price: item.price, currency: form.currency, actual_currency: form.currency, qty: item.qty || 1,
+          group_name: form.group_name || 'Personal', purchased: true, photo_file_id: draft.file_id || ''
+        })));
+        res = { ok: true, error: null };
+      } else {
+        res = await api('shopping.create', { 
+          trip_id: trip!.id, item: form.item_name || 'Purchases', store: form.store,
+          est_price: form.amount, actual_price: form.amount, currency: form.currency, actual_currency: form.currency, qty: 1,
+          group_name: form.group_name || 'Personal', purchased: true, photo_file_id: draft.file_id || ''
+        });
+      }
     }
     setBusy('');
-    if (res.ok) { showToast(t('save') + ' ✓'); setDraft(null); setPreview(''); }
+    if (res.ok) { showToast(t('save') + ' ✓'); setDraft(null); setPreview(''); setOcrItems([]); }
     else showToast(res.error?.message || 'Error', 'error');
   };
 
@@ -115,11 +136,28 @@ export default function ScannerPage() {
             </div>
           </Field>
           
-          {saveType === 'shopping' && (
+          {ocrItems.length > 0 && saveType === 'shopping' && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 space-y-2 mb-4">
+              <p className="text-[12px] gold-text font-semibold">{ocrItems.length} Detected Items</p>
+              {ocrItems.map((item, i) => (
+                <div key={i} className="flex justify-between items-center text-[13px] pb-2 border-b border-zinc-800/50 last:border-0 last:pb-0">
+                  <div className="flex-1 pr-2 truncate font-medium text-zinc-200">{item.item}</div>
+                  <div className="text-zinc-500 min-w-[30px] text-right">{item.qty}x</div>
+                  <div className="gold-text min-w-[50px] text-right font-semibold">{item.price}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {saveType === 'shopping' && ocrItems.length === 0 && (
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('item')}><Input value={form.item_name} onChange={(v) => setForm({ ...form, item_name: v })} /></Field>
               <Field label={t('group')}><ChipGroup value={form.group_name} onChange={(v) => setForm({ ...form, group_name: v })} options={groupOpts} /></Field>
             </div>
+          )}
+
+          {saveType === 'shopping' && ocrItems.length > 0 && (
+            <Field label={t('group') + " (for all items)"}><ChipGroup value={form.group_name} onChange={(v) => setForm({ ...form, group_name: v })} options={groupOpts} /></Field>
           )}
 
           <Field label={t('store')}><Input value={form.store} onChange={(v) => setForm({ ...form, store: v })} /></Field>
