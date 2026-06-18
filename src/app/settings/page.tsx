@@ -86,7 +86,7 @@ export default function SettingsPage() {
             <Field label="Gemini API Key">
               <Input type="password" value={geminiKey} onChange={setGeminiKey} icon={<KeyRound size={15} />} placeholder="AIzaSy..." />
             </Field>
-            <Button onClick={saveGeminiKey} isLoading={isSaving} className="w-full" variant="secondary">Save API Key</Button>
+            <Button onClick={saveGeminiKey} isLoading={isSaving} className="w-full" variant="ghost">Save API Key</Button>
           </Card>
         )}
 
