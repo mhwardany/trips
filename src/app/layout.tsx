@@ -29,6 +29,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
+      <head>
+        {/* CSP fallback for static hosting (full headers also set via host config). */}
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+      </head>
       <body className="font-sans antialiased bg-background text-foreground">
         <ThemeProvider>
           <Toast />

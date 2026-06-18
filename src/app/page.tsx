@@ -39,7 +39,11 @@ export default function LoginPage() {
     setBusy(true);
     const res = await api<{ token: string; user: TUser }>('auth.login', { username: activeUser, pin: fullPin, device: navigator.userAgent.slice(0, 80) });
     setBusy(false);
-    if (res.ok && res.data) { setAuth(res.data.token, res.data.user); router.replace('/trips/'); }
+    if (res.ok && res.data) {
+      setAuth(res.data.token, res.data.user);
+      if (res.data.user.must_change_pin) { showToast(lang === 'ar' ? 'الرجاء تغيير رمز الدخول الافتراضي' : 'Please change your default PIN', 'error'); router.replace('/settings/'); }
+      else router.replace('/trips/');
+    }
     else { showToast(res.error?.message || 'Login failed', 'error'); setPin(''); }
   };
 

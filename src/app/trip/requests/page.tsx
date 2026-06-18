@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@/lib/utils';
 'use client';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Boxes, Camera, Flag, Link2, Save, MessageCircle, Trash2 } from 'lucide-react';
@@ -129,7 +130,7 @@ export default function RequestsPage() {
                       </button>
                     )}
                     <Badge color={r.priority === 'high' ? 'red' : r.priority === 'medium' ? 'amber' : 'muted'}><Flag size={9} />{r.priority}</Badge>
-                    {r.link && <a href={r.link} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+                    {r.link && <a href={safeExternalUrl(r.link)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 text-royal-goldsoft"><Link2 size={11} />{t('link')}</a>}
                   </p>
                   {r.notes && <p className="text-[11px] text-zinc-600 mt-1.5">{r.notes}</p>}

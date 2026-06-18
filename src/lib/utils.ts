@@ -22,3 +22,9 @@ export const formatDateLocal = (dateStr: string | undefined): string => {
 export const parseNumInput = (val: string): string => {
   return val.replace(/[٠١٢٣٤٥٦٧٨٩]/g, (d) => '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]).replace(/٫/g, '.');
 };
+
+/** Returns the URL only if it is a safe http(s) link; otherwise '#'. Blocks javascript:/data:. */
+export const safeExternalUrl = (url: string | undefined): string => {
+  const s = String(url || '').trim();
+  return /^https?:\/\//i.test(s) ? s : '#';
+};

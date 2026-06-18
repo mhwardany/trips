@@ -2,31 +2,73 @@
 import type { ApiResponse } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { enqueue } from '@/lib/offlineQueue';
+import { cacheSet, cacheGet } from '@/lib/db';
 
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || '';
+const REQUEST_TIMEOUT_MS = 20000;
 
 /** Mutating actions are queued when offline (offline-first) */
-const QUEUEABLE = /\.(create|update|delete|markPurchased|markDelivered|updateStatus)$/;
+const QUEUEABLE = /\.(create|update|delete|markPurchased|markDelivered|updateStatus|set|submit)$/;
+/** Auth error codes that should clear the local session (unified backend/frontend contract). */
+const AUTH_ERROR_CODES = ['AUTH_REQUIRED', 'UNAUTHORIZED'];
 
-export async function api<T = unknown>(action: string, payload: Record<string, unknown> = {}): Promise<ApiResponse<T>> {
+function cacheKey(action: string, payload: Record<string, unknown>): string {
+  return action + '::' + JSON.stringify(payload || {});
+}
+
+async function postJson<T>(action: string, payload: Record<string, unknown>): Promise<ApiResponse<T>> {
   const token = useAuthStore.getState().token;
   const body = JSON.stringify({ action, token, payload });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    // text/plain avoids CORS preflight against Google Apps Script
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body,
+      signal: controller.signal,
+    });
+    return (await res.json()) as ApiResponse<T>;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-  if (typeof navigator !== 'undefined' && !navigator.onLine && QUEUEABLE.test(action)) {
+export async function api<T = unknown>(action: string, payload: Record<string, unknown> = {}): Promise<ApiResponse<T>> {
+  if (!GAS_URL) {
+    return { ok: false, data: null as T, error: { code: 'CONFIG', message: 'API URL not configured (NEXT_PUBLIC_GAS_URL).' }, meta: null };
+  }
+
+  const isMutation = QUEUEABLE.test(action);
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+
+  // ---- Offline mutation: queue it ----
+  if (offline && isMutation) {
     await enqueue({ action, payload, queued_at: Date.now() });
     return { ok: true, data: { queued: true } as T, error: null, meta: { offline: true } };
   }
 
   try {
-    // text/plain avoids CORS preflight against Google Apps Script
-    const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
-    const json: ApiResponse<T> = await res.json();
-    if (!json.ok && json.error?.code === 'UNAUTHORIZED') useAuthStore.getState().clear();
+    const json = await postJson<T>(action, payload);
+    if (!json.ok && json.error && AUTH_ERROR_CODES.includes(json.error.code)) {
+      useAuthStore.getState().clear();
+    }
+    // ---- Cache successful reads for offline fallback ----
+    if (json.ok && !isMutation) {
+      try { await cacheSet(cacheKey(action, payload), json.data); } catch { /* cache best-effort */ }
+    }
     return json;
   } catch {
-    if (QUEUEABLE.test(action)) {
+    // Network failure / timeout
+    if (isMutation) {
       await enqueue({ action, payload, queued_at: Date.now() });
       return { ok: true, data: { queued: true } as T, error: null, meta: { offline: true } };
+    }
+    // Read fallback to last-known-good cached value
+    const cached = await cacheGet<T>(cacheKey(action, payload));
+    if (cached !== null) {
+      return { ok: true, data: cached, error: null, meta: { offline: true, stale: true } };
     }
     return { ok: false, data: null as T, error: { code: 'NETWORK', message: 'Network error' }, meta: null };
   }

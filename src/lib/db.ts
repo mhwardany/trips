@@ -1,19 +1,24 @@
 'use client';
-/** IndexedDB layer: offline queue + response cache */
+/** IndexedDB layer: offline queue + response cache + failed (dead-letter) queue */
 const DB_NAME = 'wardany_trip';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+
+let _dbPromise: Promise<IDBDatabase> | null = null;
 
 export function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  if (_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
       if (!db.objectStoreNames.contains('cache')) db.createObjectStore('cache', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('failed')) db.createObjectStore('failed', { keyPath: 'id', autoIncrement: true });
     };
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => { _dbPromise = null; reject(req.error); };
   });
+  return _dbPromise;
 }
 
 export async function idbPut(store: string, value: unknown): Promise<void> {

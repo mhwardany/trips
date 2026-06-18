@@ -5,6 +5,8 @@ import { useSyncStore } from '@/stores/syncStore';
 
 interface QueueItem { id?: number; action: string; payload: Record<string, unknown>; queued_at: number; }
 
+const AUTH_ERROR_CODES = ['AUTH_REQUIRED', 'UNAUTHORIZED'];
+
 export async function enqueue(item: QueueItem): Promise<void> {
   await idbPut('queue', item);
   useSyncStore.getState().refreshCount();
@@ -20,11 +22,12 @@ export async function syncQueue(): Promise<void> {
   if (syncing || typeof navigator === 'undefined' || !navigator.onLine) return;
   const initialPending = await pendingCount();
   if (initialPending === 0) return;
-  
+
   syncing = true;
   useSyncStore.getState().setSyncing(true);
   let syncSuccess = false;
-  
+  let movedToFailed = 0;
+
   try {
     const { useAuthStore } = await import('@/stores/authStore');
     const token = useAuthStore.getState().token;
@@ -35,24 +38,44 @@ export async function syncQueue(): Promise<void> {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: item.action, token, payload: item.payload })
+          body: JSON.stringify({ action: item.action, token, payload: item.payload }),
         });
         const json = await res.json();
-        if (json.ok || (json.error && !['UNAUTHORIZED', 'NETWORK'].includes(json.error.code))) {
+
+        if (json.ok) {
+          // Only remove on confirmed success — prevents silent data loss.
           await idbDelete('queue', item.id!);
           syncSuccess = true;
-        } else if (json.error?.code === 'UNAUTHORIZED') break;
-      } catch { break; } 
+        } else if (json.error && AUTH_ERROR_CODES.includes(json.error.code)) {
+          // Session expired: stop, keep items, force re-auth.
+          useAuthStore.getState().clear();
+          break;
+        } else if (json.error && json.error.code === 'NETWORK') {
+          break; // transient; retry later
+        } else {
+          // Permanent server-side rejection (e.g. validation): move to dead-letter
+          // so the user can review it instead of losing it OR blocking the queue.
+          await idbPut('failed', { action: item.action, payload: item.payload, queued_at: item.queued_at, error: json.error, failed_at: Date.now() });
+          await idbDelete('queue', item.id!);
+          movedToFailed++;
+        }
+      } catch {
+        break; // network error: stop and retry later
+      }
     }
   } finally {
     syncing = false;
     useSyncStore.getState().setSyncing(false);
     useSyncStore.getState().refreshCount();
-    if (syncSuccess) {
-      const { useUiStore } = await import('@/stores/uiStore');
-      useUiStore.getState().showToast('Offline changes synced to server ✓', 'success');
-    }
+    const { useUiStore } = await import('@/stores/uiStore');
+    if (syncSuccess) useUiStore.getState().showToast('Offline changes synced ✓', 'success');
+    if (movedToFailed > 0) useUiStore.getState().showToast(`${movedToFailed} change(s) were rejected by the server — please review`, 'error');
   }
+}
+
+/** Items the server rejected; surfaced to the user for manual review. */
+export async function failedItems(): Promise<unknown[]> {
+  return idbGetAll('failed');
 }
 
 export function initSyncListeners(): void {

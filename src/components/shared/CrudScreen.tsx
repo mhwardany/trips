@@ -38,6 +38,7 @@ export default function CrudScreen({ entity, listEndpoint, titleKey, titleIcon, 
   const t = useT();
   const trip = useTripStore((s) => s.activeTrip);
   const showToast = useUiStore((s) => s.showToast);
+  const lang = useUiStore((s) => s.lang);
   const [items, setItems] = useState<GenericRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -69,7 +70,7 @@ export default function CrudScreen({ entity, listEndpoint, titleKey, titleIcon, 
   const openEdit = (item: GenericRecord) => { setForm(initialFor(item)); setEditing(item); setModal(true); };
 
   const save = async (keepOpen = false) => {
-    for (const f of fields) if (f.required && !form[f.key]) { showToast(t(f.labelKey) + ' ؟', 'error'); return; }
+    for (const f of fields) if (f.required && !form[f.key]) { showToast((lang === 'ar' ? 'حقل مطلوب: ' : 'Required: ') + t(f.labelKey), 'error'); return; }
     setIsSaving(true);
     const payload: Record<string, unknown> = editing
       ? { id: editing.id, patch: form }

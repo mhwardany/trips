@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@/lib/utils';
 'use client';
 import { useState, useEffect } from 'react';
 import { PackageSearch, MessageCircle, ExternalLink, Image as ImageIcon, CheckCircle2, ChevronRight, Share2 } from 'lucide-react';
@@ -133,7 +134,7 @@ export default function ClientOrdersPage() {
           <MessageCircle size={16} /> {isRtl ? 'واتساب' : 'WhatsApp'}
         </Button>
         {o.link && (
-          <Button variant="ghost" onClick={() => window.open(o.link, '_blank')} className="px-3">
+          <Button variant="ghost" onClick={() => window.open(safeExternalUrl(o.link), '_blank', 'noopener,noreferrer')} className="px-3">
             <ExternalLink size={16} />
           </Button>
         )}

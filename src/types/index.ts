@@ -1,6 +1,6 @@
 export type Role = 'owner' | 'manager' | 'family';
 
-export interface User { id: string; username: string; display_name: string; role: Role; }
+export interface User { id: string; username: string; display_name: string; role: Role; must_change_pin?: boolean; }
 export interface Profile { id: string; name: string; whatsapp: string; }
 
 export interface ApiResponse<T = unknown> {
