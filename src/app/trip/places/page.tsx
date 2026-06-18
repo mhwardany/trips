@@ -117,7 +117,7 @@ export default function PlacesPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] text-foreground font-semibold truncate">{String(p.name)}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      {Number(p.rating) > 0 && <span className="flex items-center text-[11px] text-amber-400 font-medium"><Star size={10} className="fill-amber-400 mr-0.5" />{p.rating}</span>}
+                      {Number(p.rating) > 0 && <span className="flex items-center text-[11px] text-amber-400 font-medium"><Star size={10} className="fill-amber-400 mr-0.5" />{String(p.rating)}</span>}
                       {String(p.notes) && <span className="text-[11px] text-zinc-500 truncate max-w-[120px]">{String(p.notes)}</span>}
                     </div>
                   </div>
