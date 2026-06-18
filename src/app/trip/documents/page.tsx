@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BookUser, FileText, Plane, Hotel, Shield, Siren, Save, Trash2, Upload, Eye, CalendarClock } from 'lucide-react';
+import { BookUser, FileText, Plane, Hotel, Shield, Siren, Save, Trash2, Upload, Eye, CalendarClock, Coffee } from 'lucide-react';
 import { api, compressImage } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -15,6 +15,7 @@ const DOC_OPTS = [
   { value: 'hotel_booking', label: 'Hotel', icon: <Hotel size={14} /> },
   { value: 'insurance', label: 'Insurance', icon: <Shield size={14} /> },
   { value: 'emergency', label: 'Emergency', icon: <Siren size={14} /> },
+  { value: 'lounge', label: 'Lounge', icon: <Coffee size={14} /> },
   { value: 'other', label: 'Other', icon: <FileText size={14} /> }
 ];
 
