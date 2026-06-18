@@ -30,7 +30,7 @@ export default function ScannerPage() {
 
   const handleFile = async (file: File | null) => {
     if (!file || !trip) return;
-    setPreview(URL.createObjectURL(file));
+    setPreview(file.type === 'application/pdf' ? 'pdf' : URL.createObjectURL(file));
     setBusy('upload');
     const { base64, mime } = await compressImage(file);
     const up = await api<{ receipt_id: string, file_id: string }>('receipts.upload', { trip_id: trip.id, filename: file.name, mime, base64 });
@@ -78,8 +78,8 @@ export default function ScannerPage() {
         <h1 className="font-display text-[22px] gold-text">{t('scanner')}</h1>
       </div>
       <p className="text-[12px] text-zinc-500 mb-5 rise rise-1">{t('scan_hint')}</p>
-      <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => handleFile(e.target.files?.[0] || null)} />
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => handleFile(e.target.files?.[0] || null)} />
+      <input ref={camRef} type="file" accept="image/*,application/pdf" capture="environment" hidden onChange={(e) => handleFile(e.target.files?.[0] || null)} />
+      <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={(e) => handleFile(e.target.files?.[0] || null)} />
       {!draft && !busy && (
         <div className="grid grid-cols-2 gap-3 mt-4 rise rise-2">
           <button onClick={() => camRef.current?.click()} className="card-luxe py-12 text-center active:scale-[0.97] transition">
@@ -92,7 +92,13 @@ export default function ScannerPage() {
           </button>
         </div>
       )}
-      {preview && <img src={preview} alt="receipt" className="rounded-3xl border border-royal-gold/20 max-h-56 mx-auto my-5" />}
+      {preview && preview.startsWith('blob:') && <img src={preview} alt="receipt" className="rounded-3xl border border-royal-gold/20 max-h-56 mx-auto my-5" />}
+      {preview && preview === 'pdf' && (
+        <div className="card-luxe p-6 text-center my-5 rounded-3xl mx-auto w-48">
+          <span className="icon-tile !w-12 !h-12 mx-auto mb-2 bg-rose-500/10 text-rose-400 border border-rose-500/20"><ScanLine size={20} /></span>
+          <p className="text-[13px] font-semibold text-rose-300">PDF Document</p>
+        </div>
+      )}
       {busy && busy !== 'save' && <div className="text-center"><Spinner /><p className="text-[12px] text-royal-goldsoft -mt-5 animate-pulse">{busy === 'upload' ? 'Uploading…' : 'OCR…'}</p></div>}
       {draft && (
         <Card className="space-y-4">

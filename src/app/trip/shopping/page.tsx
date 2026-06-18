@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { Check, MessageCircle, Save, ShoppingBag, ShoppingCart, Store, Trash2, Truck, Users, PlusCircle, Boxes } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Check, MessageCircle, Save, ShoppingBag, ShoppingCart, Store, Trash2, Truck, Users, PlusCircle, Boxes, ScanLine } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -15,6 +16,7 @@ interface Group extends GenericRecord { name_en: string; name_ar: string }
 
 export default function ShoppingPage() {
   const t = useT();
+  const router = useRouter();
   const trip = useTripStore((s) => s.activeTrip);
   const { lang, showToast } = useUiStore();
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -338,7 +340,13 @@ export default function ShoppingPage() {
           ))}
         </div>
       )}
+      
+      <button onClick={() => router.push('/trip/scanner/')} 
+        className="fixed bottom-[175px] right-[28px] lg:right-[calc(50%-18.5rem)] w-[50px] h-[50px] bg-zinc-900 border border-royal-gold/40 rounded-[18px] z-50 flex items-center justify-center text-royal-gold shadow-[0_8px_32px_rgba(212,175,55,0.15)] active:scale-95 transition backdrop-blur-md">
+        <ScanLine size={22} />
+      </button>
       <Fab onClick={openCreate} />
+      
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
           <Field label={t('item')}><Input value={form.item} onChange={(v) => setForm({ ...form, item: v })} /></Field>

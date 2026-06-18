@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Wallet, ShoppingBag, Boxes, Menu, Search, CloudOff, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Wallet, ShoppingBag, Boxes, Menu, Search, CloudOff, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -82,14 +82,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
       <header className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <Link href="/trips/" className="min-w-0">
-          {trip ? (
-            <>
-              <p className="font-display text-[17px] gold-text truncate leading-tight">{trip.name}</p>
-              <p className="text-[11px] text-zinc-500">{trip.country} · {formatDateLocal(trip.depart_date)}</p>
-            </>
-          ) : <p className="text-[13px] text-zinc-500">{t('select_trip')}</p>}
-        </Link>
+        <div className="flex items-center gap-3 min-w-0">
+          {pathname !== '/trip/' && pathname !== '/trips/' && (
+            <button onClick={() => router.back()} className="p-1 -ml-2 text-zinc-400 hover:text-white transition active:scale-95 shrink-0">
+              {lang === 'ar' ? <ChevronRight size={26} /> : <ChevronLeft size={26} />}
+            </button>
+          )}
+          <Link href="/trips/" className="min-w-0">
+            {trip ? (
+              <>
+                <p className="font-display text-[17px] gold-text truncate leading-tight">{trip.name}</p>
+                <p className="text-[11px] text-zinc-500">{trip.country} · {formatDateLocal(trip.depart_date)}</p>
+              </>
+            ) : <p className="text-[13px] text-zinc-500">{t('select_trip')}</p>}
+          </Link>
+        </div>
         <Link href="/search/"><JoyIcon icon={Search} color="coral" size="sm" className="rounded-full" /></Link>
       </header>
       <main className="px-4">
