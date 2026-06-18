@@ -106,17 +106,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <ProfileGate>{children}</ProfileGate>
       </main>
       
-      {/* Floating Pill Navigation Bar */}
-      <nav className="fixed bottom-6 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
-        <div className="pointer-events-auto flex items-center bg-white/70 dark:bg-[#101019]/70 backdrop-blur-xl border border-white/40 dark:border-zinc-800/50 shadow-2xl rounded-full px-2 py-2 w-full max-w-sm">
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 pb-safe pt-2 bg-white/80 dark:bg-[#0a0a0f]/80 backdrop-blur-2xl border-t border-black/5 dark:border-white/5 flex justify-center">
+        <div className="flex items-center w-full max-w-md px-2 pb-2">
           {NAV.filter(n => role !== 'family' || ['dashboard', 'requests', 'settings'].includes(n.key)).map(({ href, key, Icon, color }) => {
             const active = href === '/trip/' ? pathname === '/trip' || pathname === '/trip/' : pathname?.startsWith(href.slice(0, -1));
             return (
-              <Link key={href} href={href} onClick={() => hapticLight()} className="relative flex-1 py-1.5 flex flex-col items-center gap-1.5 tap-highlight-transparent z-10">
+              <Link key={href} href={href} onClick={() => hapticLight()} className="relative flex-1 py-1 flex flex-col items-center gap-1 tap-highlight-transparent z-10">
                 {active && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 bg-white/30 dark:bg-white/10 rounded-full -z-10"
+                    className="absolute inset-0 bg-black/5 dark:bg-white/10 rounded-xl -z-10"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -125,7 +125,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 ) : (
                   <Icon size={22} className="text-zinc-500 dark:text-zinc-400 mt-1" strokeWidth={1.8} />
                 )}
-                <span className={cn('text-[9px] font-bold transition-colors duration-300', active ? 'gold-text' : 'text-zinc-500')}>{t(key)}</span>
+                <span className={cn('text-[10px] font-medium transition-colors duration-300', active ? 'gold-text' : 'text-zinc-500')}>{t(key)}</span>
               </Link>
             );
           })}
