@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PlaneTakeoff, PlaneLanding, Boxes, Gift, Wallet, Sparkles, ChevronRight, PackageSearch, CalendarRange, PieChart, ScanLine, ListChecks, Luggage, Calculator } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -21,6 +22,7 @@ const QUICK = ['client-orders', 'planner', 'budget', 'scanner', 'checklist', 'gi
 
 export default function DashboardPage() {
   const t = useT();
+  const router = useRouter();
   const trip = useTripStore((s) => s.activeTrip);
   const role = useAuthStore((s) => s.user?.role);
   const [data, setData] = useState<DashboardData | null>(null);
