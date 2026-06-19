@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
       {/* Hero: budget remaining */}
       {role !== 'family' && (
-        <Card className="rise rise-1 text-center !py-6">
+        <Card onClick={() => router.push('/trip/budget/')} className="rise rise-1 text-center !py-6 cursor-pointer hover:border-royal-gold/30 transition active:scale-[0.98]">
           <p className="text-[11px] text-zinc-500 mb-1 flex items-center justify-center gap-1.5"><Wallet size={12} />{t('budget_remaining')}</p>
           <p className="font-display text-[42px] leading-none gold-text">{fmt(w.budget_remaining)}</p>
           <p className="text-[11px] text-zinc-600 mt-1">{trip?.base_currency || 'EGP'}</p>

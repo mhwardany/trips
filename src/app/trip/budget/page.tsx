@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Flame, Gauge, PieChart, Pencil, Save, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Flame, Gauge, PieChart, Pencil, Save, TrendingUp, ChevronLeft } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -14,6 +15,7 @@ import { fmt } from '@/lib/utils';
 
 export default function BudgetPage() {
   const t = useT();
+  const router = useRouter();
   const trip = useTripStore((s) => s.activeTrip);
   const role = useAuthStore((s) => s.user?.role);
   const showToast = useUiStore((s) => s.showToast);
@@ -49,6 +51,9 @@ export default function BudgetPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 rise">
+        <button onClick={() => router.back()} className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition active:scale-95 shrink-0">
+          <ChevronLeft size={18} />
+        </button>
         <span className="icon-tile"><PieChart size={20} /></span>
         <h1 className="font-display text-[22px] gold-text">{t('budget')}</h1>
       </div>

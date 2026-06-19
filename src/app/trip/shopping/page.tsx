@@ -266,30 +266,34 @@ export default function ShoppingPage() {
         const isOver = remainEGP < 0;
 
         return (
-          <div className="bg-zinc-900 border border-royal-gold/20 rounded-2xl p-4 mb-4 rise rise-1 shadow-[0_4px_24px_rgba(212,175,55,0.05)]">
-            <div className="flex justify-between items-center mb-1.5">
-              <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-semibold">{t('trip_budget') || 'Trip Budget'}</p>
-              <div className="text-end">
-                <p className="font-display text-[15px] gold-text">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
-                <p className="font-display text-[11px] text-zinc-400">{fmt(budgetKWD)} <span className="text-[8px] text-zinc-500">{trip?.currency_code || 'USD'}</span></p>
-              </div>
+          <div className="bg-gradient-to-br from-zinc-900 to-zinc-800/80 border border-royal-gold/30 rounded-[20px] p-5 mb-5 rise rise-1 shadow-[0_8px_32px_rgba(212,175,55,0.08)] relative overflow-hidden">
+            <div className="absolute -top-6 -right-4 opacity-[0.03] text-foreground pointer-events-none">
+              <ShoppingBag size={120} strokeWidth={1} />
             </div>
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-semibold">{t('remaining') || 'Remaining'}</p>
+            
+            <div className="flex justify-between items-center mb-2 relative z-10">
+              <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('trip_budget') || 'Trip Budget'}</p>
               <div className="text-end">
-                <p className={`font-display text-[15px] ${isOver ? 'text-rose-400' : 'text-emerald-400'}`}>{fmt(remainEGP)} <span className="text-[10px] opacity-70">{trip?.base_currency || 'EGP'}</span></p>
-                <p className={`font-display text-[11px] ${isOver ? 'text-rose-400/70' : 'text-emerald-400/70'}`}>{fmt(remainKWD)} <span className="text-[8px] opacity-70">{trip?.currency_code || 'USD'}</span></p>
+                <p className="font-display text-[16px] text-foreground">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-800">
-              <div>
-                <p className="text-[9px] text-zinc-500 mb-0.5">{t('wishlist_total') || 'Wishlist Total'} ({trip?.base_currency || 'EGP'})</p>
-                <p className="font-display text-[14px] text-foreground">{fmt(totalEst)}</p>
-              </div>
+            <div className="flex justify-between items-center mb-5 relative z-10">
+              <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('remaining') || 'Remaining'}</p>
               <div className="text-end">
-                <p className="text-[9px] text-zinc-500 mb-0.5">{t('purchased_total') || 'Purchased'} ({trip?.currency_code || 'USD'})</p>
-                <p className="font-display text-[14px] text-foreground">{fmt(actualKWD)}</p>
+                <p className={`font-display text-[24px] ${isOver ? 'text-rose-400' : 'text-emerald-400'}`}>{fmt(remainEGP)} <span className="text-[11px] opacity-60">{trip?.base_currency || 'EGP'}</span></p>
+                <p className={`font-display text-[12px] ${isOver ? 'text-rose-400/70' : 'text-emerald-400/70'}`}>{fmt(remainKWD)} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-zinc-700/50 relative z-10">
+              <div className="bg-zinc-950/40 rounded-xl p-3 border border-zinc-800/50 backdrop-blur-sm">
+                <p className="text-[10px] text-zinc-400 mb-1.5 flex items-center gap-1.5"><ShoppingBag size={11}/> {t('wishlist_total') || 'Wishlist'}</p>
+                <p className="font-display text-[16px] text-foreground">{fmt(totalEst)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+              </div>
+              <div className="bg-zinc-950/40 rounded-xl p-3 border border-zinc-800/50 backdrop-blur-sm text-end">
+                <p className="text-[10px] text-zinc-400 mb-1.5 flex items-center justify-end gap-1.5"><Check size={11}/> {t('purchased_total') || 'Purchased'}</p>
+                <p className="font-display text-[16px] text-foreground">{fmt(actualKWD)} <span className="text-[10px] text-zinc-500">{trip?.currency_code || 'USD'}</span></p>
               </div>
             </div>
           </div>
