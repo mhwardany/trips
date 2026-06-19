@@ -57,6 +57,26 @@ export const PLACES: Record<string, { food: string[]; attractions: string[] }> =
       'Dubai Frame', 'Museum of the Future', 'Global Village', 
       'Sheikh Zayed Grand Mosque', 'Louvre Abu Dhabi', 'Ferrari World'
     ]
+  },
+  'France': {
+    food: ['Le Jules Verne', 'L\'Ambroisie', 'Septime', 'Café de Flore', 'Angelina', 'Le Chateaubriand', 'L\'Arpège'],
+    attractions: ['Eiffel Tower', 'Louvre Museum', 'Palace of Versailles', 'Arc de Triomphe', 'Disneyland Paris', 'Mont Saint-Michel']
+  },
+  'Italy': {
+    food: ['Osteria Francescana', 'Da Enzo al 29', 'Piazza Duomo', 'Le Calandre', 'Roscioli', 'L\'Antica Pizzeria da Michele'],
+    attractions: ['Colosseum', 'Vatican Museums', 'Leaning Tower of Pisa', 'Pantheon', 'Trevi Fountain', 'Duomo di Milano', 'Pompeii']
+  },
+  'United Kingdom': {
+    food: ['Gordon Ramsay', 'Dishoom', 'Sketch', 'The Fat Duck', 'Dinner by Heston Blumenthal', 'Rules'],
+    attractions: ['London Eye', 'Tower of London', 'British Museum', 'Stonehenge', 'Buckingham Palace', 'Windsor Castle']
+  },
+  'United States': {
+    food: ['Katz\'s Delicatessen', 'Peter Luger', 'French Laundry', 'In-N-Out Burger', 'Shake Shack', 'Le Bernardin', 'Joe\'s Stone Crab'],
+    attractions: ['Statue of Liberty', 'Times Square', 'Grand Canyon', 'Walt Disney World', 'Universal Studios', 'Golden Gate Bridge']
+  },
+  'Turkey': {
+    food: ['Nusr-Et Steakhouse', 'Hafiz Mustafa', 'CZN Burak', 'Mikla', 'Neolokal', 'Karaköy Güllüoğlu', 'Deraliye'],
+    attractions: ['Hagia Sophia', 'Blue Mosque', 'Topkapi Palace', 'Grand Bazaar', 'Galata Tower', 'Cappadocia', 'Pamukkale']
   }
 };
 
