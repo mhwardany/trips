@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Wallet, ShoppingBag, Boxes, Menu, Search, CloudOff, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Wallet, MapPin, Boxes, Settings as SettingsIcon, Search, CloudOff, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -17,10 +17,10 @@ import ProfileGate from '@/components/auth/ProfileGate';
 
 const NAV: { href: string; key: string; Icon: any; color: JoyColor }[] = [
   { href: '/trip/', key: 'dashboard', Icon: LayoutDashboard, color: 'gold' },
-  { href: '/trip/expenses/', key: 'expenses', Icon: Wallet, color: 'emerald' },
-  { href: '/trip/shopping/', key: 'shopping', Icon: ShoppingBag, color: 'coral' },
-  { href: '/trip/requests/', key: 'requests', Icon: Boxes, color: 'amethyst' },
-  { href: '/menu/', key: 'settings', Icon: Menu, color: 'ocean' }
+  { href: '/trip/finances/', key: 'finances', Icon: Wallet, color: 'emerald' },
+  { href: '/trip/explore/', key: 'activities', Icon: MapPin, color: 'coral' },
+  { href: '/trip/tools/', key: 'tools', Icon: Boxes, color: 'amethyst' },
+  { href: '/settings/', key: 'settings', Icon: SettingsIcon, color: 'ocean' }
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
