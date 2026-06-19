@@ -46,14 +46,25 @@ export default function ShoppingPage() {
       api<DashboardData>('dashboard.get', { trip_id: trip.id })
     ]);
     
-    if (dashRes.ok && dashRes.data?.widgets) {
-      setBudgetTotal(dashRes.data.widgets.budget_total || 0);
-      setBudgetRemaining(dashRes.data.widgets.budget_remaining || 0);
+    let shoppingEnvAmount = 0;
+    if (dashRes.ok && dashRes.data) {
+      const shoppingEnv = dashRes.data.envelopes?.find((e: any) => e.category === 'shopping') || { amount: 0 };
+      shoppingEnvAmount = shoppingEnv.amount || 0;
+      setBudgetTotal(shoppingEnvAmount);
     }
 
     if (itemsRes.ok && itemsRes.data) {
       const data = itemsRes.data;
       const rawItems: ShoppingItem[] = Array.isArray(data) ? data : (data.items || []);
+      
+      const rate = Number(trip.snapshot_rate) || 1;
+      const isPurchased = (v: any) => v === true || v === 'TRUE' || v === 'true';
+      const purchasedTotalKWD = rawItems.filter(i => isPurchased(i.purchased)).reduce((acc, s) => {
+        const val = parseFloat(String(s.actual_price)) || 0;
+        const qty = Number(s.qty) || 1;
+        return acc + (val * qty);
+      }, 0);
+      setBudgetRemaining(shoppingEnvAmount - (purchasedTotalKWD * rate));
       const requests: any[] = data.requests || [];
       const orders: any[] = data.client_orders || [];
       const gifts: any[] = data.gifts || [];
@@ -269,9 +280,8 @@ export default function ShoppingPage() {
         const budgetEGP = budgetTotal;
         const budgetKWD = budgetTotal / rate;
         
-        // Subtract shopping purchases from the dashboard remaining budget
-        const purchasedEGP = totalActual * rate;
-        const remainEGP = budgetRemaining - purchasedEGP;
+        // Shopping budget remaining is already calculated
+        const remainEGP = budgetRemaining;
         const remainKWD = remainEGP / rate;
         
         const actualKWD = totalActual;
@@ -283,8 +293,8 @@ export default function ShoppingPage() {
               <ShoppingBag size={120} strokeWidth={1} />
             </div>
             
-            <div className="flex justify-between items-center mb-2 relative z-10">
-              <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('trip_budget') || 'Trip Budget'}</p>
+            <div className="flex justify-between items-end mb-4">
+              <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('shopping_budget') || 'Shopping Budget'}</p>
               <div className="text-end">
                 <p className="font-display text-[16px] text-foreground">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
                 <p className="font-display text-[12px] text-zinc-400">{fmt(budgetKWD)} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
