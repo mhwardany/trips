@@ -73,7 +73,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen pb-28 max-w-2xl mx-auto">
+    <div className="min-h-screen pb-[160px] max-w-2xl mx-auto">
       {(!online || pending > 0) && (
         <div className="sticky top-0 z-40 flex items-center justify-center gap-2 text-amber-400 text-[12px] py-2 px-4"
           style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}>

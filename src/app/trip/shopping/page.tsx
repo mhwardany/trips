@@ -250,10 +250,13 @@ export default function ShoppingPage() {
   }, 0), [purchasedItems, trip]);
 
   return (
-    <div>
+    <div className="pb-24">
       <div className="flex items-center gap-3 mb-4 rise">
         <span className="icon-tile"><ShoppingBag size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('shopping')}</h1>
+        <h1 className="font-display text-[22px] gold-text flex-1">{t('shopping')}</h1>
+        <button onClick={() => router.push('/trip/scanner/')} className="icon-tile shrink-0 active:scale-95 transition">
+          <ScanLine size={18} />
+        </button>
       </div>
       
       {(() => {
@@ -389,15 +392,7 @@ export default function ShoppingPage() {
         </div>
       )}
       
-      <Fab 
-        onClick={openCreate} 
-        extraAction={
-          <button onClick={() => router.push('/trip/scanner/')} 
-            className="w-[50px] h-[50px] bg-zinc-900 border border-royal-gold/40 rounded-[18px] flex items-center justify-center text-royal-gold shadow-[0_8px_32px_rgba(212,175,55,0.15)] active:scale-95 transition backdrop-blur-md">
-            <ScanLine size={22} />
-          </button>
-        } 
-      />
+      <Fab onClick={openCreate} />
       
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
