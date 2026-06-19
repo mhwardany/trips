@@ -321,10 +321,17 @@ export default function ShoppingPage() {
                       </div>
                       <div className="text-end shrink-0">
                         {!(s as any).is_virtual && (
-                          <p className="font-display text-[13px] text-foreground">
-                            {fmt(isTrue(s.purchased) ? s.actual_price : s.est_price)} 
-                            <span className="text-[9px] text-zinc-500 ml-1">{isTrue(s.purchased) ? (s.actual_currency || s.currency) : s.currency}</span>
-                          </p>
+                          <div className="text-end">
+                            <p className="font-display text-[14px] text-foreground leading-tight">
+                              {fmt((isTrue(s.purchased) ? (parseFloat(String(s.actual_price)) || 0) : (parseFloat(String(s.est_price)) || 0)) * (Number(s.qty) || 1))}
+                              <span className="text-[9px] text-zinc-500 ml-1">{isTrue(s.purchased) ? (s.actual_currency || s.currency) : s.currency}</span>
+                            </p>
+                            {Number(s.qty) > 1 && (
+                              <p className="text-[9.5px] text-zinc-500 mt-0.5">
+                                {fmt(isTrue(s.purchased) ? s.actual_price : s.est_price)} {t('each') || 'each'}
+                              </p>
+                            )}
+                          </div>
                         )}
                         {isTrue(s.purchased) && (
                           <a href={waShare(purchaseUpdateMessage(s.item, isTrue(s.delivered) ? 'Delivered ✓' : 'Purchased ✓', trip?.name || ''))}
@@ -361,8 +368,8 @@ export default function ShoppingPage() {
               <CurrencyPicker value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} title={t('currency')} extra={trip ? [trip.currency_code] : []} /></Field></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label={t('est_price')}><Input type="text" inputMode="decimal" value={form.est_price} onChange={(v) => setForm({ ...form, est_price: parseNumInput(v) })} /></Field>
-            <Field label={t('actual_price')}>
+            <Field label={t('est_price') + ' (Unit)'}><Input type="text" inputMode="decimal" value={form.est_price} onChange={(v) => setForm({ ...form, est_price: parseNumInput(v) })} /></Field>
+            <Field label={t('actual_price') + ' (Unit)'}>
               <div className="flex gap-2">
                 <Input type="text" inputMode="decimal" value={form.actual_price} onChange={(v) => setForm({ ...form, actual_price: parseNumInput(v) })} className="flex-1" />
                 <div className="w-[85px]"><CurrencyPicker value={form.actual_currency} onChange={(v) => setForm({ ...form, actual_currency: v })} title={t('currency')} extra={trip ? [trip.currency_code] : []} /></div>
@@ -393,10 +400,10 @@ export default function ShoppingPage() {
 
       <Modal open={!!actualPricePrompt} onClose={() => setActualPricePrompt(null)} title="Actual Price & Currency">
         <div className="space-y-4">
-          <p className="text-[12px] text-zinc-500 dark:text-zinc-400">Enter the final price you paid for: <strong className="text-foreground">{actualPricePrompt?.item}</strong></p>
+          <p className="text-[12px] text-zinc-500 dark:text-zinc-400">Enter the final UNIT price you paid for: <strong className="text-foreground">{actualPricePrompt?.item}</strong></p>
           <div className="flex gap-3">
             <div className="flex-1">
-              <Field label={t('actual_price')}>
+              <Field label={t('actual_price') + ' (Unit)'}>
                 <Input type="text" inputMode="decimal" value={actualPriceInput} onChange={(v) => setActualPriceInput(parseNumInput(v))} autoFocus />
               </Field>
             </div>
