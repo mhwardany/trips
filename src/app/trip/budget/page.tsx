@@ -7,11 +7,11 @@ import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
-import type { DashboardData } from '@/types';
+import type { DashboardData, ShoppingItem } from '@/types';
 import { EXPENSE_CATEGORIES } from '@/types';
 import { EXPENSE_ICONS } from '@/lib/icons';
 import { Badge, Button, Card, Input, ProgressBar, Spinner } from '@/components/ui/Primitives';
-import { fmt } from '@/lib/utils';
+import { fmt, isTrue } from '@/lib/utils';
 
 export default function BudgetPage() {
   const t = useT();
@@ -26,13 +26,45 @@ export default function BudgetPage() {
 
   const load = useCallback(async () => {
     if (!trip) return;
-    const res = await api<DashboardData>('dashboard.get', { trip_id: trip.id });
-    if (res.ok && res.data?.trip) {
-      setData(res.data);
-      const map: Record<string, string> = {};
-      res.data.envelopes.forEach((e) => { map[e.category] = String(e.amount); });
-      setEnv(map);
-    }
+    try {
+      const [res, sRes] = await Promise.all([
+        api<DashboardData>('dashboard.get', { trip_id: trip.id }),
+        api<ShoppingItem[]>('shopping.list', { trip_id: trip.id })
+      ]);
+      
+      if (res.ok && res.data?.trip) {
+        let finalData = { ...res.data };
+        
+        // Calculate shopping expenses to reflect true budget
+        if (sRes.ok && sRes.data) {
+          const sItems = Array.isArray(sRes.data) ? sRes.data : ((sRes.data as any).items || []);
+          const rate = Number(trip.snapshot_rate) || 1;
+          const purchasedItems = sItems.filter((i: any) => isTrue(i.purchased));
+          const shoppingTotalKWD = purchasedItems.reduce((acc: number, s: any) => {
+            const val = parseFloat(String(s.actual_price)) || 0;
+            const qty = Number(s.qty) || 1;
+            return acc + (val * qty);
+          }, 0);
+          
+          const shoppingTotalEGP = shoppingTotalKWD * rate;
+          finalData.widgets.budget_spent += shoppingTotalEGP;
+          finalData.widgets.budget_remaining -= shoppingTotalEGP;
+          
+          if (finalData.budget_intel) {
+             finalData.budget_intel.on_track = finalData.widgets.budget_spent <= finalData.widgets.budget_total;
+          }
+          
+          // Also add shopping to spentByCat
+          finalData.charts.by_category = { ...finalData.charts.by_category };
+          finalData.charts.by_category['shopping'] = (finalData.charts.by_category['shopping'] || 0) + shoppingTotalEGP;
+        }
+        
+        setData(finalData);
+        const map: Record<string, string> = {};
+        finalData.envelopes.forEach((e) => { map[e.category] = String(e.amount); });
+        setEnv(map);
+      }
+    } catch (e) {}
   }, [trip]);
   useEffect(() => { void load(); }, [load]);
 
