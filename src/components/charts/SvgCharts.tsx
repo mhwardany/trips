@@ -8,7 +8,7 @@ export function PieChart({ data }: { data: { label: string; value: number }[] })
   if (!total) return null;
   let angle = -90;
   const slices = data.filter((d) => d.value > 0).map((d, i) => {
-    const sweep = (d.value / total) * 360;
+    const sweep = (d.value / total) === 1 ? 359.99 : (d.value / total) * 360;
     const large = sweep > 180 ? 1 : 0;
     const r = 80, cx = 100, cy = 100;
     const rad = (a: number) => (a * Math.PI) / 180;
@@ -20,8 +20,8 @@ export function PieChart({ data }: { data: { label: string; value: number }[] })
   return (
     <div className="flex items-center gap-4 flex-wrap">
       <svg viewBox="0 0 200 200" className="w-40 h-40">
-        {slices.map((s, i) => <path key={i} d={s.d} fill={s.color} opacity={0.9} stroke="#0A0A0A" strokeWidth={2} />)}
-        <circle cx={100} cy={100} r={45} fill="#0A0A0A" />
+        {slices.map((s, i) => <path key={i} d={s.d} fill={s.color} opacity={0.9} stroke="var(--surface)" strokeWidth={2} />)}
+        <circle cx={100} cy={100} r={45} fill="var(--surface)" />
       </svg>
       <div className="space-y-1 text-xs">
         {slices.map((s, i) => (
