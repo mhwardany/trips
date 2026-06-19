@@ -268,8 +268,12 @@ export default function ShoppingPage() {
         const rate = Number(trip?.snapshot_rate) || 1;
         const budgetEGP = budgetTotal;
         const budgetKWD = budgetTotal / rate;
-        const remainEGP = budgetRemaining;
-        const remainKWD = budgetRemaining / rate;
+        
+        // Subtract shopping purchases from the dashboard remaining budget
+        const purchasedEGP = totalActual * rate;
+        const remainEGP = budgetRemaining - purchasedEGP;
+        const remainKWD = remainEGP / rate;
+        
         const actualKWD = totalActual;
         const isOver = remainEGP < 0;
 
