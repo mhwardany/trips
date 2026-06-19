@@ -1,12 +1,12 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BookUser, FileText, Plane, Hotel, Shield, Siren, Save, Trash2, Upload, Eye, CalendarClock, Coffee } from 'lucide-react';
+import { BookUser, FileText, Plane, Hotel, Shield, Siren, Save, Trash2, Upload, Eye, CalendarClock, Coffee, Plus } from 'lucide-react';
 import { api, compressImage } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { GenericRecord } from '@/types';
-import { Badge, Button, Card, ChipGroup, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, Spinner, ListSkeleton } from '@/components/ui/Primitives';
+import { Badge, Button, Card, ChipGroup, ConfirmDialog, EmptyState, Field, Input, Modal, ListSkeleton } from '@/components/ui/Primitives';
 import { VirtualList } from '@/components/ui/VirtualList';
 
 const DOC_OPTS = [
@@ -72,7 +72,10 @@ export default function DocumentsPage() {
     <div>
       <div className="flex items-center gap-3 mb-1 rise">
         <span className="icon-tile"><FileText size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('documents')}</h1>
+        <h1 className="font-display text-[22px] gold-text flex-1">{t('documents')}</h1>
+        <button onClick={() => { setForm({ title: '', type: 'passport', expiry_date: '' }); setPendingFile(null); setModal(true); }} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition shrink-0">
+          <Plus size={20} strokeWidth={2.5} />
+        </button>
       </div>
       <p className="text-[11px] text-zinc-500 mb-4 ps-1 rise rise-1">Secure links expire after 30 minutes.</p>
       {loading ? <ListSkeleton /> : items.length === 0 ? <EmptyState imageSrc="/illustrations/empty-documents.svg" /> : (
@@ -102,7 +105,6 @@ export default function DocumentsPage() {
           }}
         />
       )}
-      <Fab onClick={() => { setForm({ title: '', type: 'passport', expiry_date: '' }); setPendingFile(null); setModal(true); }} />
       <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={(e) => setPendingFile(e.target.files?.[0] || null)} />
       <Modal open={modal} onClose={() => setModal(false)} title={t('add')}>
         <div className="space-y-4">

@@ -1,14 +1,14 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, CalendarDays, ChevronRight, Mail, Menu, Plane, RefreshCw, Sparkles, Trash2, Wallet } from 'lucide-react';
+import { Archive, CalendarDays, ChevronRight, Mail, Menu, Plane, RefreshCw, Sparkles, Trash2, Wallet, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT, useIsRtl } from '@/lib/i18n';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { Trip } from '@/types';
-import { Button, Card, ConfirmDialog, Fab, Field, Input, Modal, Segmented, ChipGroup, EmptyState } from '@/components/ui/Primitives';
+import { Button, Card, ConfirmDialog, Field, Input, Modal, Segmented, ChipGroup, EmptyState } from '@/components/ui/Primitives';
 import { CountryPicker, ListPicker } from '@/components/ui/Pickers';
 import { AIRLINES, COUNTRIES } from '@/lib/catalog';
 import DestinationImage from '@/components/shared/DestinationImage';
@@ -121,12 +121,17 @@ export default function TripsPage() {
 
   return (
     <div className="min-h-screen max-w-2xl mx-auto px-4 pt-7 pb-28">
-      <div className="flex items-center justify-between mb-6 rise">
-        <div className="flex items-center gap-3">
-          <JoyIcon icon={Plane} color="ocean" size="sm" />
-          <h1 className="font-display text-[24px] gold-text">{t('trips')}</h1>
+      <div className="flex items-center gap-3 mb-6 rise">
+        <JoyIcon icon={Plane} color="ocean" size="sm" />
+        <h1 className="font-display text-[24px] gold-text flex-1">{t('trips')}</h1>
+        <div className="flex gap-2 shrink-0 items-center">
+          {canManage && (
+            <button onClick={() => { setForm({ ...EMPTY_FORM }); setModal(true); }} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition">
+              <Plus size={20} strokeWidth={2.5} />
+            </button>
+          )}
+          <button onClick={() => router.push('/menu/')} className="tap-highlight-transparent"><JoyIcon icon={Menu} color="coral" size="sm" className="!w-10 !h-10" /></button>
         </div>
-        <button onClick={() => router.push('/menu/')} className="tap-highlight-transparent"><JoyIcon icon={Menu} color="coral" size="sm" className="!w-10 !h-10" /></button>
       </div>
 
       <div className="mb-5 rise rise-1">
@@ -227,8 +232,6 @@ export default function TripsPage() {
           })}
         </div>
       )}
-
-      {canManage && <Fab onClick={() => { setForm({ ...EMPTY_FORM }); setModal(true); }} />}
 
       <Modal open={modal} onClose={() => setModal(false)} title={t('new_trip')}>
         <div className="space-y-4">

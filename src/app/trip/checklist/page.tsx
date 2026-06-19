@@ -7,7 +7,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { GenericRecord } from '@/types';
 import { CHECKLIST_PHASES } from '@/types';
-import { Button, Card, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, ProgressBar, Spinner, ListSkeleton } from '@/components/ui/Primitives';
+import { Button, Card, ConfirmDialog, EmptyState, Field, Input, Modal, ProgressBar, ListSkeleton } from '@/components/ui/Primitives';
 import { isTrue, cn } from '@/lib/utils';
 
 export default function ChecklistPage() {
@@ -67,7 +67,10 @@ export default function ChecklistPage() {
     <div>
       <div className="flex items-center gap-3 mb-4 rise">
         <span className="icon-tile"><ListChecks size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('checklist')}</h1>
+        <h1 className="font-display text-[22px] gold-text flex-1">{t('checklist')}</h1>
+        <button onClick={() => setModal(true)} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition shrink-0">
+          <Plus size={20} strokeWidth={2.5} />
+        </button>
       </div>
       <div className="grid grid-cols-2 gap-2 mb-4 rise rise-1">
         {CHECKLIST_PHASES.map((p) => (
@@ -101,8 +104,7 @@ export default function ChecklistPage() {
           ))}
         </div>
       )}
-      <Fab onClick={() => setModal(true)} />
-      <Modal open={modal} onClose={() => setModal(false)} title={t(phase)}>
+      <Modal open={modal} onClose={() => setModal(false)} title={t('add')}>
         <div className="space-y-4">
           <Field label={t('item')}><Input value={newItem} onChange={setNewItem} icon={<Plus size={16} />} /></Field>
           <Button onClick={add} isLoading={isSaving} className="w-full"><Save size={17} />{t('save')}</Button>

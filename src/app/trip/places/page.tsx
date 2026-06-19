@@ -1,12 +1,12 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MapPin, Save, Star, Trash2, UtensilsCrossed, Coffee, Building2, Landmark, ExternalLink } from 'lucide-react';
+import { MapPin, Save, Star, Trash2, UtensilsCrossed, Coffee, Building2, Landmark, ExternalLink, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { GenericRecord } from '@/types';
-import { Button, Card, ChipGroup, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, Spinner, StarRating, TextArea, ListSkeleton } from '@/components/ui/Primitives';
+import { Button, Card, ChipGroup, ConfirmDialog, EmptyState, Field, Input, Modal, StarRating, TextArea, ListSkeleton } from '@/components/ui/Primitives';
 import 'leaflet/dist/leaflet.css';
 
 const CAT_OPTS = [
@@ -100,7 +100,10 @@ export default function PlacesPage() {
     <div>
       <div className="flex items-center gap-3 mb-3 rise">
         <span className="icon-tile"><MapPin size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('places')}</h1>
+        <h1 className="font-display text-[22px] gold-text flex-1">{t('places')}</h1>
+        <button onClick={openCreate} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition shrink-0">
+          <Plus size={20} strokeWidth={2.5} />
+        </button>
       </div>
       <p className="text-[11px] text-zinc-500 mb-3 ps-1 rise rise-1">{t('tap_map_hint')}</p>
       <div ref={mapRef} className="h-60 rounded-3xl border border-royal-gold/15 mb-4 z-0 rise rise-1" />
@@ -135,7 +138,6 @@ export default function PlacesPage() {
           })}
         </div>
       )}
-      <Fab onClick={openCreate} />
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
           <Field label={t('name')}><Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} autoFocus /></Field>

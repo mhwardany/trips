@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ScanLine, Save, Trash2, Wallet } from 'lucide-react';
+import { ScanLine, Save, Trash2, Wallet, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -76,7 +76,14 @@ export default function ExpensesPage() {
       <div className="flex items-center gap-3 mb-4 rise">
         <span className="icon-tile"><Wallet size={20} /></span>
         <h1 className="font-display text-[22px] gold-text flex-1">{t('expenses')}</h1>
-        <Link href="/trip/scanner/" className="icon-tile"><ScanLine size={18} /></Link>
+        <div className="flex gap-2 shrink-0">
+          <Link href="/trip/scanner/" className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-[12px] flex items-center justify-center text-zinc-400 hover:text-white active:scale-95 transition">
+            <ScanLine size={18} />
+          </Link>
+          <button onClick={openCreate} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition">
+            <Plus size={20} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
       <div className="mb-4 rise rise-1"><ChipGroup value={filter} onChange={setFilter} options={catOpts} /></div>
       <Card className="mb-4 text-center !py-5 rise rise-2">
@@ -102,7 +109,7 @@ export default function ExpensesPage() {
           ))}
         </div>
       )}
-      <Fab onClick={openCreate} />
+      
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
         <div className="space-y-4">
           <Field label={t('amount')}>

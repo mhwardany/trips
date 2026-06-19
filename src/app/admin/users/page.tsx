@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Crown, Mail, Save, ShieldOff, ShieldCheck, User, UserCog, KeyRound, Trash2 } from 'lucide-react';
+import { Crown, Mail, Save, ShieldOff, ShieldCheck, User, UserCog, KeyRound, Trash2, Plus } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -67,7 +67,12 @@ export default function UsersPage() {
       <div className="pt-1">
         <div className="flex items-center gap-3 mb-4 rise">
           <span className="icon-tile"><Crown size={20} /></span>
-          <h1 className="font-display text-[22px] gold-text">{t('users')}</h1>
+          <h1 className="font-display text-[22px] gold-text flex-1">{t('users')}</h1>
+          {tab === 'users' && (
+            <button onClick={() => { setEditing(null); setForm({ username: '', display_name: '', role: 'family', pin: '', email: '' }); setModal(true); }} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition shrink-0">
+              <Plus size={20} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
         
         <div className="mb-4">
@@ -116,7 +121,6 @@ export default function UsersPage() {
             ))}
           </div>
         )}
-        {tab === 'users' && <Fab onClick={() => { setEditing(null); setForm({ username: '', display_name: '', role: 'family', pin: '', email: '' }); setModal(true); }} />}
         <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('edit') : t('add')}>
           <div className="space-y-4">
             {!editing && <Field label={t('username')}><Input value={form.username} onChange={(v) => setForm({ ...form, username: v.toLowerCase() })} icon={<User size={15} />} /></Field>}

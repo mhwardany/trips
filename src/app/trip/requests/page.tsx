@@ -1,7 +1,7 @@
 'use client';
 import { safeExternalUrl } from '@/lib/utils';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { Boxes, Camera, Flag, Link2, Save, MessageCircle, Trash2 } from 'lucide-react';
+import { Boxes, Camera, Flag, Link2, Save, MessageCircle, Trash2, Plus } from 'lucide-react';
 import { api, compressImage } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useProfileStore } from '@/stores/profileStore';
 import type { FamilyRequest } from '@/types';
 import { REQUEST_STATUSES } from '@/types';
-import { Badge, Button, Card, ChipGroup, EmptyState, Fab, Field, Input, Modal, Segmented, Spinner, TextArea, ListSkeleton } from '@/components/ui/Primitives';
+import { Badge, Button, Card, ChipGroup, EmptyState, Field, Input, Modal, Segmented, Spinner, TextArea, ListSkeleton } from '@/components/ui/Primitives';
 
 const STATUS_COLORS: Record<string, 'muted' | 'gold' | 'amber' | 'green' | 'red'> = {
   requested: 'muted', planned: 'gold', searching: 'amber', available: 'amber',
@@ -107,7 +107,10 @@ export default function RequestsPage() {
     <div>
       <div className="flex items-center gap-3 mb-4 rise">
         <span className="icon-tile"><Boxes size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('requests')}</h1>
+        <h1 className="font-display text-[22px] gold-text flex-1">{t('requests')}</h1>
+        <button onClick={() => setModal(true)} className="w-10 h-10 bg-royal-gold text-zinc-900 rounded-[12px] flex items-center justify-center shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition shrink-0">
+          <Plus size={20} strokeWidth={2.5} />
+        </button>
       </div>
       <div className="mb-4 rise rise-1">
         <ChipGroup value={tab} onChange={setTab}
@@ -141,7 +144,6 @@ export default function RequestsPage() {
           ))}
         </div>
       )}
-      <Fab onClick={() => setModal(true)} />
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={async (e) => {
         const f = e.target.files?.[0];
         if (f) { const c = await compressImage(f); setImageB64({ ...c, name: f.name }); }
