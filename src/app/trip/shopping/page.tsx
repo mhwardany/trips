@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
-import type { GenericRecord, ShoppingItem } from '@/types';
+import type { GenericRecord, ShoppingItem, DashboardData } from '@/types';
 import { Badge, Button, Card, ChipGroup, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, Spinner, Stepper, TextArea, ListSkeleton } from '@/components/ui/Primitives';
 import { CurrencyPicker, StorePicker } from '@/components/ui/Pickers';
 import { fmt, isTrue, parseNumInput } from '@/lib/utils';
@@ -33,16 +33,23 @@ export default function ShoppingPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [budgetAmount, setBudgetAmount] = useState(0);
   const [form, setForm] = useState({ item: '', group_name: 'Personal', qty: 1, est_price: '', actual_price: '', currency: '', actual_currency: '', store: '', notes: '', request_id: '', client_order_id: '', gift_id: '' });
 
   const load = useCallback(async () => {
     if (!trip) return;
     setLoading(true);
-    const [itemsRes, groupsRes] = await Promise.all([
+    const [itemsRes, groupsRes, dashRes] = await Promise.all([
       api<any>('shopping.list', { trip_id: trip.id }),
-      api<Group[]>('groups.list', {})
+      api<Group[]>('groups.list', {}),
+      api<DashboardData>('dashboard.get', { trip_id: trip.id })
     ]);
     
+    if (dashRes.ok && dashRes.data?.envelopes) {
+      const shopEnv = dashRes.data.envelopes.find(e => e.category === 'shopping');
+      if (shopEnv) setBudgetAmount(shopEnv.amount);
+    }
+
     if (itemsRes.ok && itemsRes.data) {
       const data = itemsRes.data;
       const rawItems: ShoppingItem[] = Array.isArray(data) ? data : (data.items || []);
@@ -248,16 +255,57 @@ export default function ShoppingPage() {
         <h1 className="font-display text-[22px] gold-text">{t('shopping')}</h1>
       </div>
       
-      <div className="grid grid-cols-2 gap-3 mb-4 rise rise-1">
-        <Card flat className="!p-3.5 text-center">
-          <p className="text-[10px] text-zinc-500 mb-1">{t('wishlist_total') || 'Wishlist Total'} ({trip?.base_currency || 'EGP'})</p>
-          <p className="font-display text-[18px] text-foreground">{fmt(totalEst)}</p>
-        </Card>
-        <Card flat className="!p-3.5 text-center">
-          <p className="text-[10px] text-zinc-500 mb-1">{t('purchased_total') || 'Purchased Total'} ({trip?.currency_code || 'USD'})</p>
-          <p className="font-display text-[18px] gold-text">{fmt(totalActual)}</p>
-        </Card>
-      </div>
+      {budgetAmount > 0 ? (() => {
+        const rate = Number(trip?.snapshot_rate) || 1;
+        const budgetEGP = budgetAmount;
+        const budgetKWD = budgetAmount / rate;
+        const actualKWD = totalActual;
+        const actualEGP = totalActual * rate;
+        const remainingEGP = budgetEGP - actualEGP;
+        const remainingKWD = budgetKWD - actualKWD;
+        const isOver = remainingEGP < 0;
+
+        return (
+          <div className="bg-zinc-900 border border-royal-gold/20 rounded-2xl p-4 mb-4 rise rise-1 shadow-[0_4px_24px_rgba(212,175,55,0.05)]">
+            <div className="flex justify-between items-center mb-1.5">
+              <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-semibold">{t('budget') || 'Budget'}</p>
+              <div className="text-end">
+                <p className="font-display text-[15px] gold-text">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[11px] text-zinc-400">{fmt(budgetKWD)} <span className="text-[8px] text-zinc-500">{trip?.currency_code || 'USD'}</span></p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-semibold">{t('remaining') || 'Remaining'}</p>
+              <div className="text-end">
+                <p className={`font-display text-[15px] ${isOver ? 'text-rose-400' : 'text-emerald-400'}`}>{fmt(remainingEGP)} <span className="text-[10px] opacity-70">{trip?.base_currency || 'EGP'}</span></p>
+                <p className={`font-display text-[11px] ${isOver ? 'text-rose-400/70' : 'text-emerald-400/70'}`}>{fmt(remainingKWD)} <span className="text-[8px] opacity-70">{trip?.currency_code || 'USD'}</span></p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-800">
+              <div>
+                <p className="text-[9px] text-zinc-500 mb-0.5">{t('wishlist_total') || 'Wishlist Total'} ({trip?.base_currency || 'EGP'})</p>
+                <p className="font-display text-[14px] text-foreground">{fmt(totalEst)}</p>
+              </div>
+              <div className="text-end">
+                <p className="text-[9px] text-zinc-500 mb-0.5">{t('purchased_total') || 'Purchased'} ({trip?.currency_code || 'USD'})</p>
+                <p className="font-display text-[14px] text-foreground">{fmt(actualKWD)}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })() : (
+        <div className="grid grid-cols-2 gap-3 mb-4 rise rise-1">
+          <Card flat className="!p-3.5 text-center">
+            <p className="text-[10px] text-zinc-500 mb-1">{t('wishlist_total') || 'Wishlist Total'} ({trip?.base_currency || 'EGP'})</p>
+            <p className="font-display text-[18px] text-foreground">{fmt(totalEst)}</p>
+          </Card>
+          <Card flat className="!p-3.5 text-center">
+            <p className="text-[10px] text-zinc-500 mb-1">{t('purchased_total') || 'Purchased Total'} ({trip?.currency_code || 'USD'})</p>
+            <p className="font-display text-[18px] gold-text">{fmt(totalActual)}</p>
+          </Card>
+        </div>
+      )}
       
       <div className="flex items-center gap-2 mb-4 rise rise-2">
         <div className="flex-1">
