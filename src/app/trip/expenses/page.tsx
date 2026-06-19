@@ -13,6 +13,7 @@ import { EXPENSE_ICONS } from '@/lib/icons';
 import { Badge, Button, Card, ChipGroup, ConfirmDialog, EmptyState, Fab, Field, Input, Modal, Segmented, Spinner, TextArea, ListSkeleton } from '@/components/ui/Primitives';
 import { CurrencyPicker } from '@/components/ui/Pickers';
 import { fmt, todayIso } from '@/lib/utils';
+import { getSuggestions } from '@/lib/data/suggestions';
 
 export default function ExpensesPage() {
   const t = useT();
@@ -28,6 +29,8 @@ export default function ExpensesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [form, setForm] = useState({ category: 'food', amount: '', currency: '', date: todayIso(), store: '', payment_method: 'cash', notes: '' });
+
+  const storeSuggestions = useMemo(() => getSuggestions(form.category, trip?.country), [form.category, trip?.country]);
 
   const load = useCallback(async () => {
     if (!trip) return;
@@ -130,7 +133,14 @@ export default function ExpensesPage() {
                 options={[{ value: 'cash', label: '💵 Cash' }, { value: 'card', label: '💳 Card' }]} />
             </Field>
           </div>
-          <Field label={t('store')}><Input value={form.store} onChange={(v) => setForm({ ...form, store: v })} /></Field>
+          <Field label={t('store')}>
+            <Input value={form.store} onChange={(v) => setForm({ ...form, store: v })} list="store-suggestions" placeholder={storeSuggestions.length ? 'Select or start typing...' : ''} />
+            {storeSuggestions.length > 0 && (
+              <datalist id="store-suggestions">
+                {storeSuggestions.map((s, idx) => <option key={idx} value={s} />)}
+              </datalist>
+            )}
+          </Field>
           <Field label={t('notes_field')}><TextArea value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} rows={2} /></Field>
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setModal(false)} className="flex-1">{t('cancel') || 'Cancel'}</Button>
