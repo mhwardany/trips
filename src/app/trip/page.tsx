@@ -44,10 +44,11 @@ export default function DashboardPage() {
         let finalData = { ...dRes.data };
         
         // Calculate shopping expenses to reflect true budget
-        if (sRes.ok && Array.isArray(sRes.data)) {
+        if (sRes.ok && sRes.data) {
+          const sItems = Array.isArray(sRes.data) ? sRes.data : ((sRes.data as any).items || []);
           const rate = Number(trip.snapshot_rate) || 1;
-          const purchasedItems = sRes.data.filter(i => isTrue(i.purchased));
-          const shoppingTotalKWD = purchasedItems.reduce((acc, s) => {
+          const purchasedItems = sItems.filter((i: any) => isTrue(i.purchased));
+          const shoppingTotalKWD = purchasedItems.reduce((acc: number, s: any) => {
             const val = parseFloat(String(s.actual_price)) || 0;
             const qty = Number(s.qty) || 1;
             return acc + (val * qty);
