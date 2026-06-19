@@ -287,6 +287,7 @@ export default function ShoppingPage() {
               <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('trip_budget') || 'Trip Budget'}</p>
               <div className="text-end">
                 <p className="font-display text-[16px] text-foreground">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[12px] text-zinc-400">{fmt(budgetKWD)} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
               </div>
             </div>
             

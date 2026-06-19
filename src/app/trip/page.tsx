@@ -2,18 +2,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PlaneTakeoff, PlaneLanding, Boxes, Gift, Wallet, Sparkles, ChevronRight, PackageSearch, CalendarRange, PieChart, ScanLine, ListChecks, Luggage, Calculator } from 'lucide-react';
+import { PlaneTakeoff, PlaneLanding, Boxes, Gift, Wallet, Sparkles, ChevronRight, PackageSearch, CalendarRange, PieChart, ScanLine, ListChecks, Luggage, Calculator, TrendingDown } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
-import type { DashboardData } from '@/types';
+import type { DashboardData, ShoppingItem } from '@/types';
 import { Card, ProgressBar, Badge } from '@/components/ui/Primitives';
 import { SECTION_ICONS } from '@/lib/icons';
 import { JoyIcon, type JoyColor } from '@/components/ui/JoyIcon';
 import DestinationImage from '@/components/shared/DestinationImage';
 import { COUNTRIES } from '@/lib/catalog';
 import { cacheGet, cacheSet } from '@/lib/db';
-import { fmt } from '@/lib/utils';
+import { fmt, isTrue } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 
 interface Tip { type: string; severity: string; text: string }
@@ -33,8 +33,44 @@ export default function DashboardPage() {
     if (!trip) return;
     const cached = await cacheGet<DashboardData>('dash_' + trip.id);
     if (cached) { setData(cached); setLoading(false); }
-    const res = await api<DashboardData>('dashboard.get', { trip_id: trip.id });
-    if (res.ok && res.data?.trip) { setData(res.data); void cacheSet('dash_' + trip.id, res.data); }
+    
+    try {
+      const [dRes, sRes] = await Promise.all([
+        api<DashboardData>('dashboard.get', { trip_id: trip.id }),
+        api<ShoppingItem[]>('shopping.list', { trip_id: trip.id })
+      ]);
+      
+      if (dRes.ok && dRes.data?.trip) {
+        let finalData = { ...dRes.data };
+        
+        // Calculate shopping expenses to reflect true budget
+        if (sRes.ok && Array.isArray(sRes.data)) {
+          const rate = Number(trip.snapshot_rate) || 1;
+          const purchasedItems = sRes.data.filter(i => isTrue(i.purchased));
+          const shoppingTotalKWD = purchasedItems.reduce((acc, s) => {
+            const val = parseFloat(String(s.actual_price)) || 0;
+            const qty = Number(s.qty) || 1;
+            return acc + (val * qty);
+          }, 0);
+          
+          // Convert shopping spent to base_currency (EGP)
+          const shoppingTotalEGP = shoppingTotalKWD * rate;
+          
+          // Deduct shopping from remaining and add to spent
+          finalData.widgets.budget_spent += shoppingTotalEGP;
+          finalData.widgets.budget_remaining -= shoppingTotalEGP;
+          
+          // Recalculate on_track status based on new spent amount
+          if (finalData.budget_intel) {
+             finalData.budget_intel.on_track = finalData.widgets.budget_spent <= finalData.widgets.budget_total;
+          }
+        }
+        
+        setData(finalData);
+        void cacheSet('dash_' + trip.id, finalData);
+      }
+    } catch (e) {}
+    
     setLoading(false);
     const tipsRes = await api<{ tips: Tip[] }>('assistant.recommend', { trip_id: trip.id });
     if (tipsRes.ok && tipsRes.data) setTips(tipsRes.data.tips || []);
@@ -85,17 +121,36 @@ export default function DashboardPage() {
 
       {/* Hero: budget remaining */}
       {role !== 'family' && (
-        <Card onClick={() => router.push('/trip/budget/')} className="rise rise-1 text-center !py-6 cursor-pointer hover:border-royal-gold/30 transition active:scale-[0.98]">
-          <p className="text-[11px] text-zinc-500 mb-1 flex items-center justify-center gap-1.5"><Wallet size={12} />{t('budget_remaining')}</p>
-          <p className="font-display text-[42px] leading-none gold-text">{fmt(w.budget_remaining)}</p>
-          <p className="text-[11px] text-zinc-600 mt-1">{trip?.base_currency || 'EGP'}</p>
-          <div className="mt-4">
-            <ProgressBar value={w.budget_spent} max={w.budget_total || 1} color={data.budget_intel.on_track ? '#2563EB' : '#EF4444'} />
-            <div className="flex justify-between text-[11px] text-zinc-500 mt-2">
-              <span>{fmt(w.budget_spent)} {t('budget_spent')}</span>
-              <Badge color={data.budget_intel.on_track ? 'green' : 'red'}>
-                {data.budget_intel.on_track ? t('on_track') : t('over_budget')}
-              </Badge>
+        <Card onClick={() => router.push('/trip/budget/')} className="rise rise-1 cursor-pointer hover:border-royal-gold/40 transition active:scale-[0.98] bg-gradient-to-br from-zinc-900 to-zinc-800/80 shadow-[0_8px_32px_rgba(212,175,55,0.08)] relative overflow-hidden !p-0">
+          <div className="absolute -top-10 -right-4 opacity-[0.03] text-foreground pointer-events-none">
+            <Wallet size={160} strokeWidth={1} />
+          </div>
+          
+          <div className="p-5 relative z-10">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold mb-1">{t('trip_budget') || 'Total Budget'}</p>
+                <p className="font-display text-[20px] text-foreground leading-none">{fmt(w.budget_total)} <span className="text-[11px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[12px] text-zinc-500 mt-1">{fmt(w.budget_total / (Number(trip?.snapshot_rate) || 1))} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
+              </div>
+              <div className="text-end">
+                <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold mb-1">{t('budget_remaining') || 'Remaining'}</p>
+                <p className={`font-display text-[32px] leading-none ${w.budget_remaining < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>{fmt(w.budget_remaining)} <span className="text-[14px] opacity-60">{trip?.base_currency || 'EGP'}</span></p>
+                <p className={`font-display text-[14px] mt-1 ${w.budget_remaining < 0 ? 'text-rose-400/70' : 'text-emerald-400/70'}`}>{fmt(w.budget_remaining / (Number(trip?.snapshot_rate) || 1))} <span className="text-[10px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-zinc-800/60">
+              <div className="flex justify-between items-end mb-2">
+                <div>
+                  <p className="text-[11px] text-zinc-400 mb-0.5">{t('budget_spent') || 'Total Spent'}</p>
+                  <p className="font-display text-[16px] text-foreground">{fmt(w.budget_spent)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                </div>
+                <Badge color={data.budget_intel.on_track ? 'green' : 'red'}>
+                  {data.budget_intel.on_track ? t('on_track') : t('over_budget')}
+                </Badge>
+              </div>
+              <ProgressBar value={w.budget_spent} max={w.budget_total || 1} color={data.budget_intel.on_track ? '#2563EB' : '#EF4444'} />
             </div>
           </div>
         </Card>
