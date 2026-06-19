@@ -123,7 +123,7 @@ export default function DashboardPage() {
       {/* Hero: budget remaining */}
       {role !== 'family' && (
         <Card onClick={() => router.push('/trip/budget/')} className="rise rise-1 cursor-pointer hover:border-royal-gold/40 transition active:scale-[0.98] bg-gradient-to-br from-zinc-900 to-zinc-800/80 shadow-[0_8px_32px_rgba(212,175,55,0.08)] relative overflow-hidden !p-0">
-          <div className="absolute -top-10 -right-4 opacity-[0.03] text-foreground pointer-events-none">
+          <div className="absolute -top-10 -right-4 opacity-[0.03] text-white pointer-events-none">
             <Wallet size={160} strokeWidth={1} />
           </div>
           
@@ -131,7 +131,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold mb-1">{t('trip_budget') || 'Total Budget'}</p>
-                <p className="font-display text-[20px] text-foreground leading-none">{fmt(w.budget_total)} <span className="text-[11px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[20px] text-white leading-none">{fmt(w.budget_total)} <span className="text-[11px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
                 <p className="font-display text-[12px] text-zinc-500 mt-1">{fmt(w.budget_total / (Number(trip?.snapshot_rate) || 1))} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
               </div>
               <div className="text-end">
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               <div className="flex justify-between items-end mb-2">
                 <div>
                   <p className="text-[11px] text-zinc-400 mb-0.5">{t('budget_spent') || 'Total Spent'}</p>
-                  <p className="font-display text-[16px] text-foreground">{fmt(w.budget_spent)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                  <p className="font-display text-[16px] text-white">{fmt(w.budget_spent)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
                 </div>
                 <Badge color={data.budget_intel.on_track ? 'green' : 'red'}>
                   {data.budget_intel.on_track ? t('on_track') : t('over_budget')}

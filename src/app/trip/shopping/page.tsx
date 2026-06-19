@@ -289,14 +289,14 @@ export default function ShoppingPage() {
 
         return (
           <div className="bg-gradient-to-br from-zinc-900 to-zinc-800/80 border border-royal-gold/30 rounded-[20px] p-5 mb-5 rise rise-1 shadow-[0_8px_32px_rgba(212,175,55,0.08)] relative overflow-hidden">
-            <div className="absolute -top-6 -right-4 opacity-[0.03] text-foreground pointer-events-none">
+            <div className="absolute -top-6 -right-4 opacity-[0.03] text-white pointer-events-none">
               <ShoppingBag size={120} strokeWidth={1} />
             </div>
             
             <div className="flex justify-between items-end mb-4">
               <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">{t('shopping_budget') || 'Shopping Budget'}</p>
               <div className="text-end">
-                <p className="font-display text-[16px] text-foreground">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[16px] text-white">{fmt(budgetEGP)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
                 <p className="font-display text-[12px] text-zinc-400">{fmt(budgetKWD)} <span className="text-[9px] opacity-60">{trip?.currency_code || 'USD'}</span></p>
               </div>
             </div>
@@ -312,11 +312,11 @@ export default function ShoppingPage() {
             <div className="grid grid-cols-2 gap-3 pt-4 border-t border-zinc-700/50 relative z-10">
               <div className="bg-zinc-950/40 rounded-xl p-3 border border-zinc-800/50 backdrop-blur-sm">
                 <p className="text-[10px] text-zinc-400 mb-1.5 flex items-center gap-1.5"><ShoppingBag size={11}/> {t('wishlist_total') || 'Wishlist'}</p>
-                <p className="font-display text-[16px] text-foreground">{fmt(totalEst)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
+                <p className="font-display text-[16px] text-white">{fmt(totalEst)} <span className="text-[10px] text-zinc-500">{trip?.base_currency || 'EGP'}</span></p>
               </div>
               <div className="bg-zinc-950/40 rounded-xl p-3 border border-zinc-800/50 backdrop-blur-sm text-end">
                 <p className="text-[10px] text-zinc-400 mb-1.5 flex items-center justify-end gap-1.5"><Check size={11}/> {t('purchased_total') || 'Purchased'}</p>
-                <p className="font-display text-[16px] text-foreground">{fmt(actualKWD)} <span className="text-[10px] text-zinc-500">{trip?.currency_code || 'USD'}</span></p>
+                <p className="font-display text-[16px] text-white">{fmt(actualKWD)} <span className="text-[10px] text-zinc-500">{trip?.currency_code || 'USD'}</span></p>
               </div>
             </div>
           </div>
@@ -343,7 +343,7 @@ export default function ShoppingPage() {
               </h3>
               <div className="space-y-2.5">
                 {groupItems.map((s) => (
-                  <Card key={s.id} flat className={`!p-3.5 ${(s as any).is_virtual ? 'border-dashed border-zinc-700 bg-zinc-900/50' : ''}`}>
+                  <Card key={s.id} flat className={`!p-3.5 ${(s as any).is_virtual ? 'border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900/50' : ''}`}>
                     <div className="flex items-center gap-3" onClick={() => openEdit(s)}>
                       <button onClick={(e) => { 
                         e.stopPropagation(); 

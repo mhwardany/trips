@@ -124,9 +124,9 @@ export default function ScannerPage() {
       {draft && (
         <Card className="space-y-4">
           <p className="text-[12px] gold-text font-semibold">Draft — review & confirm</p>
-          <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl mb-4">
-            <button className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition ${saveType === 'expense' ? 'bg-royal-gold text-black' : 'text-zinc-400'}`} onClick={() => setSaveType('expense')}>Expense</button>
-            <button className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition ${saveType === 'shopping' ? 'bg-royal-gold text-black' : 'text-zinc-400'}`} onClick={() => setSaveType('shopping')}>Shopping Item</button>
+          <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mb-4">
+            <button className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition ${saveType === 'expense' ? 'bg-royal-gold text-black' : 'text-zinc-500 dark:text-zinc-400'}`} onClick={() => setSaveType('expense')}>Expense</button>
+            <button className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition ${saveType === 'shopping' ? 'bg-royal-gold text-black' : 'text-zinc-500 dark:text-zinc-400'}`} onClick={() => setSaveType('shopping')}>Shopping Item</button>
           </div>
 
           <Field label={t('amount')}>
@@ -137,10 +137,10 @@ export default function ScannerPage() {
           </Field>
           
           {ocrItems.length > 0 && saveType === 'shopping' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 space-y-2 mb-4">
+            <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 space-y-2 mb-4">
               <p className="text-[12px] gold-text font-semibold">{ocrItems.length} Detected Items</p>
               {ocrItems.map((item, i) => (
-                <div key={i} className="flex justify-between items-center text-[13px] pb-2 border-b border-zinc-800/50 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-[13px] pb-2 border-b border-zinc-200 dark:border-zinc-800/50 last:border-0 last:pb-0">
                   <div className="flex-1 pr-2 truncate font-medium text-foreground">{item.item}</div>
                   <div className="text-zinc-500 min-w-[30px] text-right">{item.qty}x</div>
                   <div className="gold-text min-w-[50px] text-right font-semibold">{item.price}</div>
