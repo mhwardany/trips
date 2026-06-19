@@ -19,7 +19,7 @@ export default function ExplorePage() {
   const { user } = useAuthStore();
 
   return (
-    <AppShell>
+    <>
       <div className="space-y-4 pt-1 pb-10">
         <div className="flex items-center gap-3 rise">
           <span className="icon-tile">{SECTION_ICONS['places']}</span>
@@ -38,6 +38,6 @@ export default function ExplorePage() {
           </Card>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

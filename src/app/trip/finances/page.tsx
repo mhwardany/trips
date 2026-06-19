@@ -20,7 +20,7 @@ export default function FinancesPage() {
   const { user } = useAuthStore();
 
   return (
-    <AppShell>
+    <>
       <div className="space-y-4 pt-1 pb-10">
         <div className="flex items-center gap-3 rise">
           <span className="icon-tile">{SECTION_ICONS['budget']}</span>
@@ -39,6 +39,6 @@ export default function FinancesPage() {
           </Card>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
