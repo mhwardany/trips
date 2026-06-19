@@ -250,11 +250,11 @@ export default function ShoppingPage() {
       
       <div className="grid grid-cols-2 gap-3 mb-4 rise rise-1">
         <Card flat className="!p-3.5 text-center">
-          <p className="text-[10px] text-zinc-500 mb-1">Total Estimated ({trip?.base_currency || 'EGP'})</p>
+          <p className="text-[10px] text-zinc-500 mb-1">{t('wishlist_total') || 'Wishlist Total'} ({trip?.base_currency || 'EGP'})</p>
           <p className="font-display text-[18px] text-foreground">{fmt(totalEst)}</p>
         </Card>
         <Card flat className="!p-3.5 text-center">
-          <p className="text-[10px] text-zinc-500 mb-1">Total Actual ({trip?.currency_code || 'USD'})</p>
+          <p className="text-[10px] text-zinc-500 mb-1">{t('purchased_total') || 'Purchased Total'} ({trip?.currency_code || 'USD'})</p>
           <p className="font-display text-[18px] gold-text">{fmt(totalActual)}</p>
         </Card>
       </div>
