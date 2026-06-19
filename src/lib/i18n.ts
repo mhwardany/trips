@@ -11,6 +11,10 @@ export function useT() {
   const lang = useUiStore((s) => s.lang);
   return useCallback((key: string): string => {
     const translations: Record<string, { en: string; ar: string }> = {
+      management: { en: 'Management', ar: 'الإدارة' },
+      finances: { en: 'Finances', ar: 'المالية والميزانية' },
+      activities: { en: 'Activities', ar: 'الأنشطة والأماكن' },
+      tools: { en: 'Tools & Info', ar: 'أدوات ومعلومات' },
       destination: { en: 'Destination', ar: 'الوجهة' },
       origin_country: { en: 'Origin Country', ar: 'بلد الانطلاق' },
       destination_country: { en: 'Destination Country', ar: 'دولة الوجهة' },
