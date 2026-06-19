@@ -141,7 +141,7 @@ export default function ScannerPage() {
               <p className="text-[12px] gold-text font-semibold">{ocrItems.length} Detected Items</p>
               {ocrItems.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-[13px] pb-2 border-b border-zinc-800/50 last:border-0 last:pb-0">
-                  <div className="flex-1 pr-2 truncate font-medium text-zinc-200">{item.item}</div>
+                  <div className="flex-1 pr-2 truncate font-medium text-foreground">{item.item}</div>
                   <div className="text-zinc-500 min-w-[30px] text-right">{item.qty}x</div>
                   <div className="gold-text min-w-[50px] text-right font-semibold">{item.price}</div>
                 </div>
