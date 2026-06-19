@@ -4,10 +4,10 @@ import { PieChart as PieIcon, TrendingUp, BarChart3 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useTripStore } from '@/stores/tripStore';
-import type { DashboardData } from '@/types';
+import type { DashboardData, ShoppingItem } from '@/types';
 import { Card, Spinner } from '@/components/ui/Primitives';
 import { BarChart, LineChart, PieChart } from '@/components/charts/SvgCharts';
-import { fmt } from '@/lib/utils';
+import { fmt, isTrue } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const t = useT();
@@ -16,8 +16,45 @@ export default function AnalyticsPage() {
 
   const load = useCallback(async () => {
     if (!trip) return;
-    const res = await api<DashboardData>('dashboard.get', { trip_id: trip.id });
-    if (res.ok && res.data?.trip) setData(res.data);
+    try {
+      const [res, sRes] = await Promise.all([
+        api<DashboardData>('dashboard.get', { trip_id: trip.id }),
+        api<ShoppingItem[]>('shopping.list', { trip_id: trip.id })
+      ]);
+      
+      if (res.ok && res.data?.trip) {
+        let finalData = { ...res.data };
+        
+        if (sRes.ok && sRes.data) {
+          const sItems = Array.isArray(sRes.data) ? sRes.data : ((sRes.data as any).items || []);
+          const rate = Number(trip.snapshot_rate) || 1;
+          const purchasedItems = sItems.filter((i: any) => isTrue(i.purchased));
+          const shoppingTotalKWD = purchasedItems.reduce((acc: number, s: any) => {
+            const val = parseFloat(String(s.actual_price)) || 0;
+            const qty = Number(s.qty) || 1;
+            return acc + (val * qty);
+          }, 0);
+          
+          const shoppingTotalEGP = shoppingTotalKWD * rate;
+          finalData.widgets.budget_spent += shoppingTotalEGP;
+          finalData.widgets.budget_remaining -= shoppingTotalEGP;
+          
+          if (finalData.budget_intel) {
+             finalData.budget_intel.on_track = finalData.widgets.budget_spent <= finalData.widgets.budget_total;
+          }
+          
+          finalData.charts.by_category = { ...finalData.charts.by_category };
+          finalData.charts.by_category['shopping'] = (finalData.charts.by_category['shopping'] || 0) + shoppingTotalEGP;
+          
+          const envIndex = finalData.envelopes.findIndex(e => e.category === 'shopping');
+          if (envIndex >= 0) {
+            finalData.envelopes[envIndex].spent = (finalData.envelopes[envIndex].spent || 0) + shoppingTotalEGP;
+          }
+        }
+        
+        setData(finalData);
+      }
+    } catch (e) {}
   }, [trip]);
   useEffect(() => { void load(); }, [load]);
 
