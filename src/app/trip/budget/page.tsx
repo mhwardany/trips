@@ -76,7 +76,7 @@ export default function BudgetPage() {
     
     let budgetTotalChanged = false;
     if (totalBudgetInput && parseFloat(totalBudgetInput) !== (data?.trip?.budget_total || 0)) {
-      await api('trips.update', { id: trip!.id, payload: { budget_total: parseFloat(totalBudgetInput) } });
+      await api('trips.update', { id: trip!.id, budget_total: parseFloat(totalBudgetInput) });
       budgetTotalChanged = true;
     }
 
