@@ -23,6 +23,7 @@ export default function BudgetPage() {
   const [env, setEnv] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [totalBudgetInput, setTotalBudgetInput] = useState<string>('');
 
   const load = useCallback(async () => {
     if (!trip) return;
@@ -60,6 +61,7 @@ export default function BudgetPage() {
         }
         
         setData(finalData);
+        setTotalBudgetInput(String(finalData.trip?.budget_total || ''));
         const map: Record<string, string> = {};
         finalData.envelopes.forEach((e) => { map[e.category] = String(e.amount); });
         setEnv(map);
@@ -71,9 +73,22 @@ export default function BudgetPage() {
   const saveEnvelopes = async () => {
     setIsSaving(true);
     const envelopes = EXPENSE_CATEGORIES.map((c) => ({ category: c, amount: parseFloat(env[c] || '0') || 0 }));
+    
+    let budgetTotalChanged = false;
+    if (totalBudgetInput && parseFloat(totalBudgetInput) !== (data?.trip?.budget_total || 0)) {
+      await api('trips.update', { id: trip!.id, payload: { budget_total: parseFloat(totalBudgetInput) } });
+      budgetTotalChanged = true;
+    }
+
     const res = await api('envelopes.set', { trip_id: trip!.id, envelopes });
     setIsSaving(false);
-    if (res.ok) { showToast(t('save') + ' ✓'); setEditing(false); void load(); }
+    
+    if (res.ok || budgetTotalChanged) { 
+      showToast(t('save') + ' ✓'); 
+      setEditing(false); 
+      // Delay to allow backend sync
+      setTimeout(() => void load(), 1000);
+    }
   };
 
   if (!data) return <Spinner />;
@@ -116,6 +131,14 @@ export default function BudgetPage() {
             className="chip chip-on !h-9">{editing ? <Save size={13} /> : <Pencil size={13} />}{editing ? t('save') : t('edit')}</button>
         )}
       </div>
+      {editing && (
+        <Card flat className="!p-3.5 rise rise-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] text-foreground font-bold flex-1">{t('trip_budget') || 'Total Trip Budget'}</span>
+            <Input type="number" inputMode="decimal" value={totalBudgetInput} onChange={(v) => setTotalBudgetInput(v)} className="!w-28 !h-10 text-end !bg-royal-gold/10 !border-royal-gold/30 !text-royal-gold font-bold" />
+          </div>
+        </Card>
+      )}
       <div className="space-y-2.5">
         {EXPENSE_CATEGORIES.map((c) => {
           const envelope = envelopes.find((e) => e.category === c);
