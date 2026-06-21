@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { useUiStore } from '@/stores/uiStore';
 import { Button, Card } from '@/components/ui/Primitives';
+import AppShell from '@/components/layout/AppShell';
 
 export default function GlobalReportsPage() {
   const t = useT();
@@ -37,7 +38,8 @@ export default function GlobalReportsPage() {
   ];
 
   return (
-    <div className="max-w-md mx-auto space-y-6 pt-2 pb-10 px-4">
+    <AppShell>
+      <div className="max-w-md mx-auto space-y-6 pt-2 pb-10 px-4">
       <div className="flex items-center gap-3 rise">
         <span className="icon-tile"><FileBarChart2 size={20} /></span>
         <div>
@@ -74,5 +76,6 @@ export default function GlobalReportsPage() {
         </Card>
       </div>
     </div>
+    </AppShell>
   );
 }
