@@ -130,7 +130,7 @@ export default function TripsPage() {
               <Plus size={20} strokeWidth={2.5} />
             </button>
           )}
-          <button onClick={() => router.push('/menu/')} className="tap-highlight-transparent"><JoyIcon icon={Menu} color="coral" size="sm" className="!w-10 !h-10" /></button>
+          <button onClick={() => router.push('/settings/')} className="tap-highlight-transparent"><JoyIcon icon={Menu} color="coral" size="sm" className="!w-10 !h-10" /></button>
         </div>
       </div>
 
