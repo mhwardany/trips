@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Toast from '@/components/layout/Toast';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
+import { DirProvider } from '@/components/layout/DirProvider';
 
 export const metadata: Metadata = {
   title: 'WARDANY TRIP',
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
         <ThemeProvider>
+          <DirProvider />
           <Toast />
           {children}
         </ThemeProvider>
