@@ -83,6 +83,16 @@ export default function SettingsPage() {
           </button>
         </Card>
 
+        <div className="space-y-2 rise rise-1">
+          <Card className="p-0 overflow-hidden">
+            <Link href="/trips/" className="flex items-center gap-3 p-3.5 border-b border-zinc-200 dark:border-zinc-800/40 last:border-0 active:bg-zinc-100 dark:active:bg-zinc-800/50 transition">
+              {SECTION_ICONS['trips']}
+              <span className="flex-1 text-[14px] text-foreground font-medium">{lang === 'ar' ? 'كل الرحلات (تغيير الرحلة)' : 'All Trips (Switch Trip)'}</span>
+              <ChevronRight size={18} className="text-zinc-400 dark:text-zinc-600" />
+            </Link>
+          </Card>
+        </div>
+
         {Object.keys(ADMIN_SECTIONS).filter(k => !ADMIN_SECTIONS[k].roles || ADMIN_SECTIONS[k].roles?.includes(user?.role || '')).length > 0 && (
           <div className="space-y-2 rise rise-1">
             <h3 className="text-[12px] font-bold text-zinc-500 uppercase tracking-wider px-2">{t('management') || 'Management & Analytics'}</h3>
