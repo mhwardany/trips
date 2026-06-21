@@ -41,7 +41,7 @@ export default function TripSettingsPage() {
   ];
 
   return (
-    <div className="space-y-6 pt-2 pb-10">
+    <div className="max-w-md mx-auto space-y-6 pt-2 pb-10 px-4">
       <div className="flex items-center gap-3 rise">
         <span className="icon-tile"><FileBarChart2 size={20} /></span>
         <div>
