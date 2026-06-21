@@ -50,6 +50,11 @@ export default function TripsPage() {
 
   useEffect(() => { if (!token) router.replace('/'); }, [token, router]);
 
+  useEffect(() => {
+    // Clear active trip when returning to the trips list
+    setActiveTrip(null);
+  }, [setActiveTrip]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const res = await api<Trip[]>('trips.list', {});
