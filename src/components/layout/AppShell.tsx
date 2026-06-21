@@ -20,7 +20,7 @@ const NAV: { href: string; key: string; Icon: any; color: JoyColor }[] = [
   { href: '/trip/shopping/', key: 'shopping', Icon: ShoppingBag, color: 'coral' },
   { href: '/trip/finances/', key: 'finances', Icon: Wallet, color: 'emerald' },
   { href: '/trip/explore/', key: 'places', Icon: MapPin, color: 'amethyst' },
-  { href: '/settings/', key: 'settings', Icon: SettingsIcon, color: 'ocean' }
+  { href: '/trip/settings/', key: 'settings', Icon: SettingsIcon, color: 'ocean' }
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

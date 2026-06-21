@@ -12,7 +12,7 @@ import { Button, Card, Field, Input, Segmented } from '@/components/ui/Primitive
 import { SECTION_ICONS } from '@/lib/icons';
 
 const ADMIN_SECTIONS: Record<string, { href: string; roles?: string[] }> = {
-  reports: { href: '/trip/reports/', roles: ['owner', 'manager'] },
+  reports: { href: '/settings/reports/', roles: ['owner', 'manager'] },
   analytics: { href: '/trip/analytics/' },
   users: { href: '/admin/users/', roles: ['owner'] },
 };

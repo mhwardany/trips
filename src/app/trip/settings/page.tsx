@@ -7,7 +7,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useUiStore } from '@/stores/uiStore';
 import { Button, Card, ChipGroup } from '@/components/ui/Primitives';
 
-export default function ReportsPage() {
+export default function TripSettingsPage() {
   const t = useT();
   const trip = useTripStore((s) => s.activeTrip);
   const showToast = useUiStore((s) => s.showToast);
@@ -36,16 +36,22 @@ export default function ReportsPage() {
   };
 
   const blocks = [
-    { kind: 'pdf' as const, Icon: FileText, title: 'Full Trip Report', desc: 'Budget, expenses, shopping & gifts — branded PDF', label: t('export_pdf'), gold: true },
-    { kind: 'excel' as const, Icon: FileSpreadsheet, title: 'Excel Workbook', desc: 'Expenses + Shopping + Gifts (.xlsx)', label: t('export_excel'), gold: false }
+    { kind: 'pdf' as const, Icon: FileText, title: 'Trip Report (PDF)', desc: 'Enterprise-grade printable report', label: t('export_pdf'), gold: true },
+    { kind: 'excel' as const, Icon: FileSpreadsheet, title: 'Trip Workbook (Excel)', desc: 'Detailed data + Summary', label: t('export_excel'), gold: false }
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pt-2 pb-10">
       <div className="flex items-center gap-3 rise">
         <span className="icon-tile"><FileBarChart2 size={20} /></span>
-        <h1 className="font-display text-[22px] gold-text">{t('reports')}</h1>
+        <div>
+          <h1 className="font-display text-[22px] gold-text">Trip Settings & Reports</h1>
+          <p className="text-[12px] text-zinc-500">Settings and exports for {trip?.name}</p>
+        </div>
       </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-[12px] font-bold text-zinc-500 uppercase tracking-wider px-1">Reports & Exports</h3>
       {blocks.map(({ kind, Icon, title, desc, label, gold }, i) => (
         <Card key={kind} className={`rise rise-${i + 1}`}>
           <div className="flex items-center gap-3 mb-4">
@@ -75,6 +81,7 @@ export default function ReportsPage() {
           <FileDown size={16} />{busy === 'csv' ? t('loading') : t('export_csv')}
         </Button>
       </Card>
+      </div>
     </div>
   );
 }
