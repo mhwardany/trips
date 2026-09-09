@@ -10,3 +10,6 @@ public/fallback-*.js
 public/worker-*.js
 backend/
 test_cascade.js
+
+# SketchUp plugin build output
+sketchup/dist/
