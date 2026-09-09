@@ -45,6 +45,15 @@ module AHW
         'veneer_walnut'    => { name: 'Veneer Walnut Lacquered',  color: [92,  62,  42],  cat: 'finish', rate: 190.0 },
         'pet_white'        => { name: 'PET Matt White',           color: [246, 246, 244], cat: 'finish', rate: 105.0 },
         'fenix_grey'       => { name: 'Fenix NTM Grigio',         color: [96,  98,  100], cat: 'finish', rate: 220.0 },
+        'lacquer_ivory'    => { name: 'Lacquer Ivory',            color: [238, 230, 212], cat: 'finish', rate: 112.0 },
+        'lacquer_cream'    => { name: 'Lacquer Cream',            color: [232, 222, 200], cat: 'finish', rate: 112.0 },
+        'lacquer_taupe'    => { name: 'Lacquer Taupe',            color: [158, 148, 136], cat: 'finish', rate: 112.0 },
+        'lacquer_burgundy' => { name: 'Lacquer Burgundy',         color: [90,  40,  46],  cat: 'finish', rate: 118.0 },
+        'lacquer_olive'    => { name: 'Lacquer Olive',            color: [110, 116, 88],  cat: 'finish', rate: 118.0 },
+        'patina_gold'      => { name: 'Ivory with Gold Patina',   color: [230, 216, 186], cat: 'finish', rate: 245.0 },
+        'veneer_ash'       => { name: 'Veneer Ash Grey',          color: [172, 166, 156], cat: 'finish', rate: 178.0 },
+        'veneer_teak'      => { name: 'Veneer Teak',              color: [162, 116, 70],  cat: 'finish', rate: 185.0 },
+        'ral_custom'       => { name: 'Custom RAL Lacquer',       color: [200, 200, 200], cat: 'finish', rate: 120.0 },
 
         # ------------------------------------------------------------- tops
         'quartz_white'     => { name: 'Quartz Pure White',        color: [244, 244, 242], cat: 'top',    rate: 420.0, t: 20 },
@@ -70,10 +79,27 @@ module AHW
         'glass_lacobel'    => { name: 'Back-painted Lacobel',     color: [40,  42,  46],  cat: 'glass',  rate: 240.0, alpha: 0.02 },
 
         # --------------------------------------------------------- hardware
+        # Handle and hardware finishes. Rate is 0 because handles are counted
+        # per piece in the hardware schedule, not by area.
         'ss_brushed'       => { name: 'Stainless Brushed',        color: [176, 178, 180], cat: 'metal',  rate: 0.0 },
         'alu_anodised'     => { name: 'Aluminium Anodised',       color: [186, 188, 190], cat: 'metal',  rate: 0.0 },
         'black_matt'       => { name: 'Matt Black Metal',         color: [38,  38,  40],  cat: 'metal',  rate: 0.0 },
+        'gunmetal'         => { name: 'Gunmetal Grey',            color: [86,  90,  96],  cat: 'metal',  rate: 0.0 },
         'brass_brushed'    => { name: 'Brushed Brass',            color: [176, 144, 82],  cat: 'metal',  rate: 0.0 },
+        'brass_polished'   => { name: 'Polished Brass',           color: [206, 172, 92],  cat: 'metal',  rate: 0.0 },
+        'gold_pvd'         => { name: 'Gold PVD',                 color: [212, 175, 96],  cat: 'metal',  rate: 0.0 },
+        'rose_gold'        => { name: 'Rose Gold',                color: [198, 148, 124], cat: 'metal',  rate: 0.0 },
+        'copper'           => { name: 'Brushed Copper',           color: [176, 116, 78],  cat: 'metal',  rate: 0.0 },
+        'bronze_antique'   => { name: 'Antique Bronze',           color: [104, 82,  58],  cat: 'metal',  rate: 0.0 },
+        'nickel_satin'     => { name: 'Satin Nickel',             color: [186, 186, 182], cat: 'metal',  rate: 0.0 },
+        'white_matt'       => { name: 'Matt White Metal',         color: [242, 242, 240], cat: 'metal',  rate: 0.0 },
+        'ivory'            => { name: 'Ivory Metal',              color: [232, 224, 206], cat: 'metal',  rate: 0.0 },
+        'ceramic_white'    => { name: 'White Ceramic',            color: [248, 246, 242], cat: 'metal',  rate: 0.0 },
+        'crystal_clear'    => { name: 'Cut Crystal',              color: [222, 232, 238], cat: 'metal',  rate: 0.0, alpha: 0.35 },
+        'oak_handle'       => { name: 'Solid Oak Handle',         color: [196, 160, 112], cat: 'metal',  rate: 0.0 },
+        'walnut_handle'    => { name: 'Solid Walnut Handle',      color: [94,  64,  44],  cat: 'metal',  rate: 0.0 },
+        'leather_tan'      => { name: 'Tan Leather',              color: [150, 104, 66],  cat: 'metal',  rate: 0.0 },
+        'leather_black'    => { name: 'Black Leather',            color: [42,  40,  40],  cat: 'metal',  rate: 0.0 },
         'chrome'           => { name: 'Polished Chrome',          color: [206, 210, 214], cat: 'metal',  rate: 0.0 },
         'pvc_black'        => { name: 'PVC Plinth Black',         color: [44,  44,  46],  cat: 'metal',  rate: 18.0 },
         'led_warm'         => { name: 'LED Warm 3000K',           color: [255, 226, 170], cat: 'light',  rate: 0.0, alpha: 0.75 },

@@ -1,16 +1,16 @@
 {
-  "name": "K Tall fridge housing 600",
+  "name": "S Classic base 600 shaker brass",
   "saved": "2026-09-09 12:34",
   "plugin": "1.1.0",
   "params": {
     "schema": 3,
-    "type": "tall",
+    "type": "base",
     "family": "kitchen",
-    "style": "modern",
-    "name": "K Tall fridge housing 600",
+    "style": "classic",
+    "name": "S Classic base 600 shaker brass",
     "w": 600.0,
-    "h": 2100.0,
-    "d": 580.0,
+    "h": 720.0,
+    "d": 560.0,
     "panel_t": 18.0,
     "front_t": 18.0,
     "back_t": 6.0,
@@ -25,9 +25,9 @@
     "plinth": {
       "mode": "panel",
       "h": 150.0,
-      "setback": 50.0,
+      "setback": 40.0,
       "leg_dia": 40.0,
-      "returns": false,
+      "returns": true,
       "shadow": 0.0,
       "led": false
     },
@@ -35,14 +35,14 @@
       "mode": "overlay_full",
       "gap": 3.0,
       "reveal_top": 0.0,
-      "style": "slab",
+      "style": "shaker",
       "radius": 0.0,
       "show_hinges": true,
       "hinge_type": "blumotion_110",
       "shaker": {
-        "rail": 70.0,
-        "panel_t": 8.0,
-        "panel_inset": 10.0
+        "rail": 90.0,
+        "panel_t": 10.0,
+        "panel_inset": 6.0
       },
       "ribbed": {
         "pitch": 30.0,
@@ -56,25 +56,25 @@
         "glass_t": 5.0
       },
       "handle": {
-        "type": "bar",
-        "length": 160.0,
-        "proj": 32.0,
+        "type": "cup_pull",
+        "length": 96.0,
+        "proj": 26.0,
         "dia": 14.0,
-        "pos": "top",
-        "offset": 50.0,
-        "material": "ss_brushed"
+        "pos": "centre",
+        "offset": 60.0,
+        "material": "brass_polished"
       }
     },
     "rows": [
       {
-        "kind": "appliance",
-        "h": 0.0,
+        "kind": "drawer",
+        "h": 140.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
         "lift": "hf",
         "panels": 2,
-        "appl": "fridge",
+        "appl": null,
         "appl_integrated": true,
         "block": "",
         "drawer": {
@@ -106,7 +106,7 @@
       }
     ],
     "interior": {
-      "shelves": 4,
+      "shelves": 1,
       "shelf_mode": "adjustable",
       "shelf_setback": 20.0,
       "dividers": 0,
@@ -126,14 +126,14 @@
       "front_b": true
     },
     "counter": {
-      "on": false,
-      "t": 20.0,
+      "on": true,
+      "t": 30.0,
       "front_oh": 20.0,
       "back_oh": 0.0,
       "oh_l": 0.0,
       "oh_r": 0.0,
-      "edge": "square",
-      "edge_size": 3.0,
+      "edge": "bullnose",
+      "edge_size": 15.0,
       "mitre_t": 60.0,
       "splash": {
         "on": false,
@@ -166,14 +166,14 @@
       "dy": 0.0
     },
     "materials": {
-      "carcass": "ply_18_natural",
-      "front": "lacquer_white",
+      "carcass": "mdf_18_raw",
+      "front": "lacquer_ivory",
       "back": "hdf_white",
-      "shelf": "ply_18_natural",
-      "counter": "quartz_white",
+      "shelf": "mdf_18_raw",
+      "counter": "marble_carrara",
       "drawer_box": "ply_15_natural",
       "plinth": "pvc_black",
-      "hardware": "ss_brushed",
+      "hardware": "brass_polished",
       "glass": "glass_clear"
     },
     "hood_style": "chimney",

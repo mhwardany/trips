@@ -257,10 +257,12 @@ module AHW
             cup_x = side == 'left' ? x + 22.0 : x + width - 22.0
             Geom3.cylinder(gents, [cup_x, back_y, hz], 17.5, 12.0, :y, 16)
           end
+          kind = layout.params['front']['hinge_type']
           Geom3.finish_part(group, model,
-                            name: 'Hinges', part: 'Hinge', material: 'ss_brushed',
+                            name: 'Hinges', part: 'Hinge',
+                            material: layout.material('hardware'),
                             dims: [55.0, 60.0, 30.0], length: 0, width: 0, thick: 0,
-                            qty: count, note: 'Clip-top 110 soft close')
+                            qty: count, note: kind.to_s.tr('_', ' '))
         end
 
         def lift_arm(ents, model, layout, x, width, z, height, system)

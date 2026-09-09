@@ -10,7 +10,7 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.0.0'
+    PLUGIN_VERSION = '1.1.0'
     PATH_ROOT = File.expand_path('../src', __dir__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
     PATH_HTML = File.join(PATH_LIB, 'ui', 'html').freeze
@@ -21,8 +21,9 @@ end
 require File.join(AHW::KD::PATH_LIB, 'main.rb')
 include AHW::KD
 
-def preset(name, type, overrides = {})
+def preset(name, type, overrides = {}, style = nil)
   params = Util.deep_merge(Params.defaults(type), Params.stringify(overrides))
+  params = Styles.apply(params, style) if style
   params['name'] = name
   Export::Catalog.save(name, params)
   puts "  #{name}"
@@ -142,5 +143,29 @@ preset('D Dressing island 1200', 'island_dresser',
 
 preset('D Corner wardrobe L 1000', 'corner_wardrobe',
        'corner' => { 'mode' => 'l', 'return_w' => 1400.0, 'return_d' => 600.0, 'front_b' => true })
+
+# ------------------------------------------------------- style showcase
+# One unit per design style, so the whole palette is one click away.
+preset('S Modern base 600', 'base', {}, 'modern')
+preset('S Ultra modern base 600 handleless', 'base',
+       { 'plinth' => { 'led' => true } }, 'ultra_modern')
+preset('S Contemporary base 600 fluted', 'base', {}, 'contemporary')
+preset('S Classic base 600 shaker brass', 'base', {}, 'classic')
+preset('S Neo classic base 600', 'base', {}, 'neo_classic')
+preset('S Minimal base 600 finger pull', 'base', {}, 'minimal')
+preset('S Industrial base 600', 'base', {}, 'industrial')
+preset('S Scandinavian base 600 oak', 'base', {}, 'scandinavian')
+preset('S Ultra modern vanity 800 floating LED', 'vanity_wall',
+       { 'plinth' => { 'mode' => 'floating', 'h' => 150.0, 'setback' => 70.0,
+                       'shadow' => 25.0, 'led' => true },
+         'interior' => { 'accessories' => [Params.accessory('u_drawer', 'z' => 20.0),
+                                           Params.accessory('hair_dryer_holder', 'z' => 200.0)] } },
+       'ultra_modern')
+preset('S Classic wardrobe 1200 cup pulls', 'wardrobe',
+       { 'w' => 1200.0,
+         'interior' => { 'accessories' => [Params.accessory('hanging_rail', 'z' => 1600.0),
+                                           Params.accessory('valet_rod', 'z' => 1400.0, 'w' => 60.0),
+                                           Params.accessory('belt_rack', 'z' => 900.0, 'w' => 80.0)] } },
+       'classic')
 
 puts "done — #{Export::Catalog.list.size} presets in #{Export::Catalog.folder}"

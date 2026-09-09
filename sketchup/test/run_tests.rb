@@ -11,7 +11,7 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.0.0'
+    PLUGIN_VERSION = '1.1.0'
     PATH_ROOT = File.expand_path('../src', __dir__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
     PATH_HTML = File.join(PATH_LIB, 'ui', 'html').freeze
@@ -199,10 +199,101 @@ check('every appliance placeholder builds') do
 end
 
 check('every plinth mode builds') do
-  %w[panel legs floating none].all? do |mode|
+  %w[panel legs floating wall_hung none].all? do |mode|
     params = Params.defaults('base')
     params['plinth']['mode'] = mode
     Builders::Unit.create(MODEL, params).entities.size.positive?
+  end
+end
+
+check('the integrated floating base draws its shadow gap and LED') do
+  params = Params.defaults('vanity_wall')
+  params['plinth'] = params['plinth'].merge(
+    'mode' => 'floating', 'h' => 150.0, 'setback' => 70.0, 'shadow' => 25.0, 'led' => true
+  )
+  unit = Builders::Unit.create(MODEL, params)
+  parts = Export::Report.parts_of(unit)
+  parts.any? { |row| row['part'] == 'Plinth' } && parts.any? { |row| row['part'] == 'Lighting' }
+end
+
+check('a wall hung unit gets a rail and no plinth height') do
+  params = Params.defaults('vanity_wall')
+  params['plinth'] = params['plinth'].merge('mode' => 'wall_hung', 'led' => true)
+  normalized = Params.normalize(params)
+  unit = Builders::Unit.create(MODEL, normalized)
+  parts = Export::Report.parts_of(unit)
+  normalized['plinth']['h'].zero? && parts.any? { |row| row['part'] == 'Mounting Rail' }
+end
+
+# ------------------------------------------------------------- handles
+check('every handle finish exists in the material library') do
+  Const::HANDLE_FINISHES.all? { |key| Materials::LIBRARY.key?(key) }
+end
+
+check('every handle type builds horizontally and vertically') do
+  Const::HANDLE_TYPES.all? do |kind|
+    %w[top left].all? do |pos|
+      params = Params.defaults('base')
+      params['front']['handle']['type'] = kind
+      params['front']['handle']['pos'] = pos
+      Builders::Unit.create(MODEL, params).entities.size.positive?
+    end
+  end
+end
+
+check('a drawn handle reaches the hardware schedule with its finish') do
+  params = Params.defaults('wall')
+  params['front']['handle']['type'] = 'cup_pull'
+  params['front']['handle']['material'] = 'brass_polished'
+  unit = Builders::Unit.create(MODEL, params)
+  Export::Report.parts_of(unit).any? do |row|
+    row['part'] == 'Handle' && row['material'] == 'brass_polished'
+  end
+end
+
+check('handle types that need no geometry draw none') do
+  Const::HANDLE_NONE.all? do |kind|
+    params = Params.defaults('wall')
+    params['front']['handle']['type'] = kind
+    unit = Builders::Unit.create(MODEL, params)
+    Export::Report.parts_of(unit).none? { |row| row['part'] == 'Handle' }
+  end
+end
+
+# -------------------------------------------------------- design styles
+check('every design style applies and builds on every family') do
+  Styles.keys.all? do |style|
+    %w[base vanity wardrobe].all? do |type|
+      params = Styles.apply(Params.defaults(type), style)
+      params['style'] == style &&
+        Builders::Unit.create(MODEL, Params.normalize(params)).entities.size.positive?
+    end
+  end
+end
+
+check('a style changes the look but never the size or the front layout') do
+  before = Params.normalize(Params.defaults('drawer_bank'))
+  after  = Params.normalize(Styles.apply(before, 'classic'))
+  before['w'] == after['w'] && before['h'] == after['h'] && before['d'] == after['d'] &&
+    before['rows'].size == after['rows'].size &&
+    before['rows'].map { |r| r['kind'] } == after['rows'].map { |r| r['kind'] } &&
+    after['front']['style'] == 'shaker' &&
+    after['front']['handle']['type'] == 'cup_pull' &&
+    after['materials']['front'] == 'lacquer_ivory'
+end
+
+check('a style never puts a plinth under a wall hung type') do
+  Styles.keys.all? do |style|
+    params = Styles.apply(Params.defaults('wall'), style)
+    params['plinth']['mode'] == 'none'
+  end
+end
+
+check('every style palette resolves to real materials') do
+  Styles::SPECS.values.all? do |spec|
+    spec['materials'].values.all? do |palette|
+      palette.values.all? { |key| Materials::LIBRARY.key?(key) }
+    end && Materials::LIBRARY.key?(spec['front']['handle']['material'])
   end
 end
 
@@ -268,6 +359,50 @@ check('every handle type builds on a small leaf') do
     params['w'] = 300.0
     params['front']['handle']['type'] = handle
     Builders::Unit.create(MODEL, params).entities.size.positive?
+  end
+end
+
+check('a corner radius produces a real rounded leaf') do
+  params = Params.defaults('wall')
+  params['front']['style'] = 'slab'
+  params['front']['radius'] = 12.0
+  unit = Builders::Unit.create(MODEL, params)
+  Export::Report.parts_of(unit).any? { |row| row['note'].to_s.include?('R12') }
+end
+
+check('rounded_rect closes and respects the radius limit') do
+  outline = Geom3.rounded_rect(0.0, 0.0, 100.0, 40.0, 500.0)
+  xs = outline.map(&:first)
+  zs = outline.map(&:last)
+  outline.size > 8 && xs.min >= -0.01 && xs.max <= 100.01 &&
+    zs.min >= -0.01 && zs.max <= 40.01
+end
+
+check('a scribe gable runs past the fronts') do
+  plain = Params.normalize(Params.defaults('tall'))
+  scribed = Params.normalize(plain.merge('side_mode' => 'scribe', 'scribe' => 25.0))
+  a = Export::Report.parts_of(Builders::Unit.create(MODEL, plain))
+      .find { |row| row['part'] == 'Gable' }
+  b = Export::Report.parts_of(Builders::Unit.create(MODEL, scribed))
+      .find { |row| row['part'] == 'Gable' }
+  b['width_mm'] > a['width_mm'] && b['note'].to_s.include?('scribe')
+end
+
+check('the hinge type reaches the hardware schedule') do
+  params = Params.defaults('wall')
+  params['front']['hinge_type'] = 'glass_door_170'
+  unit = Builders::Unit.create(MODEL, params)
+  Export::Report.parts_of(unit).any? do |row|
+    row['part'] == 'Hinge' && row['note'].to_s.include?('glass door 170')
+  end
+end
+
+check('every hinge type normalises and builds') do
+  Const::HINGE_TYPES.all? do |kind|
+    params = Params.defaults('wall')
+    params['front']['hinge_type'] = kind
+    Params.normalize(params)['front']['hinge_type'] == kind &&
+      Builders::Unit.create(MODEL, params).entities.size.positive?
   end
 end
 

@@ -104,6 +104,39 @@ module AHW
         nil
       end
 
+      # Prism extruded along Y from a cross-section drawn in the XZ plane.
+      # section is an array of [x, z] pairs in mm.
+      def prism_y(entities, y0, depth, section)
+        pts = section.map { |(x, z)| p3(x, y0, z) }
+        face = entities.add_face(pts)
+        return nil unless face
+
+        distance = Util.mm(depth)
+        face.pushpull(face.normal.y > 0 ? distance : -distance)
+        face
+      rescue StandardError => e
+        Log.warn("prism_y failed: #{e.message}")
+        nil
+      end
+
+      # Outline of a rectangle with rounded corners, in the XZ plane, ready
+      # for prism_y. Falls back to a plain rectangle when the radius is nil.
+      def rounded_rect(x, z, w, h, radius, segments = 5)
+        r = Util.clamp(radius.to_f, 0.0, [w, h].min / 2.0 - 0.5)
+        return [[x, z], [x + w, z], [x + w, z + h], [x, z + h]] if r < 0.5
+
+        corners = [[x + r,     z + r,     Math::PI,        1.5 * Math::PI],
+                   [x + w - r, z + r,     1.5 * Math::PI,  2.0 * Math::PI],
+                   [x + w - r, z + h - r, 0.0,             0.5 * Math::PI],
+                   [x + r,     z + h - r, 0.5 * Math::PI,  Math::PI]]
+        corners.flat_map do |(cx, cz, from, to)|
+          (0..segments).map do |i|
+            angle = from + (to - from) * i / segments.to_f
+            [cx + r * Math.cos(angle), cz + r * Math.sin(angle)]
+          end
+        end
+      end
+
       # --------------------------------------------------------------- holes
       # Cut a rectangular hole straight down through a solid group.
       # rect is [x, y, w, d] in mm; the hole is cut from the group's top face.

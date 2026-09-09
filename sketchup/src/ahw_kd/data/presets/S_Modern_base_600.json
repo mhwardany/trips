@@ -1,16 +1,16 @@
 {
-  "name": "K Tall fridge housing 600",
+  "name": "S Modern base 600",
   "saved": "2026-09-09 12:34",
   "plugin": "1.1.0",
   "params": {
     "schema": 3,
-    "type": "tall",
+    "type": "base",
     "family": "kitchen",
     "style": "modern",
-    "name": "K Tall fridge housing 600",
+    "name": "S Modern base 600",
     "w": 600.0,
-    "h": 2100.0,
-    "d": 580.0,
+    "h": 720.0,
+    "d": 560.0,
     "panel_t": 18.0,
     "front_t": 18.0,
     "back_t": 6.0,
@@ -57,24 +57,24 @@
       },
       "handle": {
         "type": "bar",
-        "length": 160.0,
+        "length": 192.0,
         "proj": 32.0,
         "dia": 14.0,
         "pos": "top",
-        "offset": 50.0,
+        "offset": 45.0,
         "material": "ss_brushed"
       }
     },
     "rows": [
       {
-        "kind": "appliance",
-        "h": 0.0,
+        "kind": "drawer",
+        "h": 140.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
         "lift": "hf",
         "panels": 2,
-        "appl": "fridge",
+        "appl": null,
         "appl_integrated": true,
         "block": "",
         "drawer": {
@@ -106,7 +106,7 @@
       }
     ],
     "interior": {
-      "shelves": 4,
+      "shelves": 1,
       "shelf_mode": "adjustable",
       "shelf_setback": 20.0,
       "dividers": 0,
@@ -126,14 +126,14 @@
       "front_b": true
     },
     "counter": {
-      "on": false,
-      "t": 20.0,
+      "on": true,
+      "t": 30.0,
       "front_oh": 20.0,
       "back_oh": 0.0,
       "oh_l": 0.0,
       "oh_r": 0.0,
       "edge": "square",
-      "edge_size": 3.0,
+      "edge_size": 2.0,
       "mitre_t": 60.0,
       "splash": {
         "on": false,
@@ -166,10 +166,10 @@
       "dy": 0.0
     },
     "materials": {
-      "carcass": "ply_18_natural",
+      "carcass": "mfc_white",
       "front": "lacquer_white",
       "back": "hdf_white",
-      "shelf": "ply_18_natural",
+      "shelf": "mfc_white",
       "counter": "quartz_white",
       "drawer_box": "ply_15_natural",
       "plinth": "pvc_black",

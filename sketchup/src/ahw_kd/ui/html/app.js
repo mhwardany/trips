@@ -104,7 +104,18 @@ var AHWKD = (function () {
     place: ['Place', 'إدراج بالماوس'], insert: ['Insert', 'إدراج'], apply: ['Apply', 'تطبيق'],
     auto: ['Live update', 'تحديث مباشر'], zoom: ['Zoom', 'تكبير'],
     editing: ['editing selected unit', 'تعديل الوحدة المحددة'], newunit: ['new unit', 'وحدة جديدة'],
-    load_sel: ['Load selection', 'تحميل المحدد']
+    load_sel: ['Load selection', 'تحميل المحدد'],
+    design_style: ['Design style', 'نمط التصميم'],
+    style_hint: ['Applies door profile, handle, edge detail, plinth and palette together. Sizes and layout are untouched.',
+                 'يطبق شكل الضلفة والمقبض وحرف الرخامة والقاعدة والخامات معاً. المقاسات والتقسيم لا تتغير.'],
+    handle_shape: ['Handle shape', 'شكل المقبض'],
+    handle_finish: ['Handle finish', 'خامة / لون المقبض'],
+    plinth_led: ['LED in shadow gap', 'إضاءة LED في فتحة الظل'],
+    plinth_shadow: ['Shadow gap mm', 'فتحة الظل مم'],
+    side_mode: ['End panels', 'الجنب / الباكية'],
+    scribe: ['Scribe past front mm', 'زيادة الجنب للحائط مم'],
+    hinge_type: ['Hinge type', 'نوع المفصلة'],
+    radius: ['Corner radius mm', 'نصف قطر الركن مم']
   };
 
   function t(key) {
@@ -257,7 +268,7 @@ var AHWKD = (function () {
 
   function geometry() {
     var p = S.params;
-    var plinth = p.plinth.mode === 'none' ? 0 : p.plinth.h;
+    var plinth = (p.plinth.mode === 'none' || p.plinth.mode === 'wall_hung') ? 0 : p.plinth.h;
     var z0 = plinth, z1 = plinth + p.h;
     var counter = p.counter.on ? p.counter.t : 0;
     var t = p.panel_t, gap = p.front.gap;
@@ -303,7 +314,7 @@ var AHWKD = (function () {
            '" height="' + W(p.h) + '"/>';
 
     /* plinth */
-    if (g.plinth > 0) {
+    if (g.plinth > 0.5) {
       svg += '<rect class="plinth" x="' + X(20) + '" y="' + Y(g.plinth) + '" width="' +
              W(p.w - 40) + '" height="' + W(g.plinth) + '"/>';
     }
@@ -447,6 +458,15 @@ var AHWKD = (function () {
       '<button class="btn wide" data-act="reset-size">' + t('reset_size') + '</button>'
     );
 
+    html += fieldset(t('design_style'),
+      '<p class="hint">' + t('style_hint') + '</p>' +
+      '<div class="style-grid">' +
+      (S.lists.styles_design || []).map(function (st) {
+        return '<button class="style-chip' + (S.params.style === st.key ? ' on' : '') +
+          '" data-act="style" data-style="' + st.key + '">' +
+          esc(S.lang === 'ar' ? st.ar : st.en) + '</button>';
+      }).join('') + '</div>');
+
     if (S.params.type === 'hood') {
       html += fieldset(t('hood_style'),
         sel('hood_style', t('hood_style'),
@@ -473,15 +493,18 @@ var AHWKD = (function () {
            num('back_inset', t('back_inset'), 1)) +
       grid(sel('top_mode', t('top_mode'), pairs(['rails', 'full', 'none'])) +
            num('rail_w', t('rail_w'), 5)) +
-      sel('bottom_mode', t('bottom_mode'), pairs(['full', 'none']))
+      grid(sel('bottom_mode', t('bottom_mode'), pairs(['full', 'none'])) +
+           sel('side_mode', t('side_mode'), pairs(['full', 'scribe']), true)) +
+      (S.params.side_mode === 'scribe' ? num('scribe', t('scribe'), 5) : '')
     );
 
     html += fieldset(t('plinth_mode'),
-      grid(sel('plinth.mode', t('plinth_mode'), pairs(['panel', 'legs', 'floating', 'none'])) +
+      grid(sel('plinth.mode', t('plinth_mode'), pairs(['panel', 'legs', 'floating', 'wall_hung', 'none']), true) +
            num('plinth.h', t('plinth_h'), 5)) +
       grid(num('plinth.setback', t('plinth_setback'), 5) + num('plinth.leg_dia', t('leg_dia'), 1)) +
-      grid(num('plinth.shadow', t('shadow'), 1) + '') +
-      chk('plinth.returns', t('plinth_returns'))
+      grid(num('plinth.shadow', t('plinth_shadow'), 1) + '') +
+      chk('plinth.returns', t('plinth_returns')) +
+      chk('plinth.led', t('plinth_led'))
     );
 
     if (S.params.type === 'base_corner' || S.params.type === 'corner_wardrobe') {
@@ -505,6 +528,8 @@ var AHWKD = (function () {
            num('front.gap', t('gap'), 0.5)) +
       grid(sel('front.style', t('style'), pairs(S.lists.styles || []), true) +
            num('front.reveal_top', t('reveal_top'), 1)) +
+      grid(num('front.radius', t('radius'), 1) +
+           sel('front.hinge_type', t('hinge_type'), pairs(S.lists.hinges || []))) +
       chk('front.show_hinges', t('show_hinges'))
     );
 
@@ -531,13 +556,14 @@ var AHWKD = (function () {
     }
 
     html += fieldset(t('handle'),
-      grid(sel('front.handle.type', t('handle'), pairs(S.lists.handles || [])) +
+      grid(sel('front.handle.type', t('handle_shape'), pairs(S.lists.handles || []), true) +
            sel('front.handle.pos', t('handle_pos'), pairs(['top', 'bottom', 'left', 'right', 'centre']))) +
+      sel('front.handle.material', t('handle_finish'),
+        (S.lists.finishes || []).map(function (f) { return [f.key, f.label]; })) +
       grid(num('front.handle.length', t('handle_len'), 5) +
            num('front.handle.proj', t('handle_proj'), 1)) +
       grid(num('front.handle.dia', t('handle_dia'), 1) +
-           num('front.handle.offset', t('handle_offset'), 5)) +
-      sel('front.handle.material', t('m_hardware'), materialOptions())
+           num('front.handle.offset', t('handle_offset'), 5))
     );
 
     html += fieldset(t('rows'), rowsEditor() +
@@ -864,6 +890,11 @@ var AHWKD = (function () {
         break;
       case 'acc-del':
         accs.splice(index, 1); render(); scheduleApply();
+        break;
+      case 'style':
+        call('apply_style', JSON.stringify({
+          style: node.getAttribute('data-style'), params: S.params
+        }));
         break;
       case 'preset-save':
         call('preset_save', JSON.stringify({

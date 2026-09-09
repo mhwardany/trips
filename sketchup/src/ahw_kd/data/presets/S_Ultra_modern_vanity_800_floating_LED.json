@@ -1,16 +1,16 @@
 {
-  "name": "K Tall fridge housing 600",
+  "name": "S Ultra modern vanity 800 floating LED",
   "saved": "2026-09-09 12:34",
   "plugin": "1.1.0",
   "params": {
     "schema": 3,
-    "type": "tall",
-    "family": "kitchen",
-    "style": "modern",
-    "name": "K Tall fridge housing 600",
-    "w": 600.0,
-    "h": 2100.0,
-    "d": 580.0,
+    "type": "vanity_wall",
+    "family": "bathroom",
+    "style": "ultra_modern",
+    "name": "S Ultra modern vanity 800 floating LED",
+    "w": 800.0,
+    "h": 500.0,
+    "d": 480.0,
     "panel_t": 18.0,
     "front_t": 18.0,
     "back_t": 6.0,
@@ -23,19 +23,19 @@
     "side_mode": "full",
     "scribe": 20.0,
     "plinth": {
-      "mode": "panel",
-      "h": 150.0,
-      "setback": 50.0,
+      "mode": "none",
+      "h": 0.0,
+      "setback": 70.0,
       "leg_dia": 40.0,
       "returns": false,
-      "shadow": 0.0,
-      "led": false
+      "shadow": 25.0,
+      "led": true
     },
     "front": {
       "mode": "overlay_full",
-      "gap": 3.0,
+      "gap": 2.0,
       "reveal_top": 0.0,
-      "style": "slab",
+      "style": "handleless_j",
       "radius": 0.0,
       "show_hinges": true,
       "hinge_type": "blumotion_110",
@@ -56,37 +56,18 @@
         "glass_t": 5.0
       },
       "handle": {
-        "type": "bar",
-        "length": 160.0,
-        "proj": 32.0,
-        "dia": 14.0,
+        "type": "push_open",
+        "length": 0.0,
+        "proj": 0.0,
+        "dia": 0.0,
         "pos": "top",
-        "offset": 50.0,
-        "material": "ss_brushed"
+        "offset": 0.0,
+        "material": "black_matt"
       }
     },
     "rows": [
       {
-        "kind": "appliance",
-        "h": 0.0,
-        "cols": 1,
-        "hinge": "left",
-        "style": null,
-        "lift": "hf",
-        "panels": 2,
-        "appl": "fridge",
-        "appl_integrated": true,
-        "block": "",
-        "drawer": {
-          "box": true,
-          "runner": "tandem",
-          "box_h": 0.0,
-          "insert": "none"
-        },
-        "note": ""
-      },
-      {
-        "kind": "door",
+        "kind": "drawer",
         "h": 0.0,
         "cols": 1,
         "hinge": "left",
@@ -106,7 +87,7 @@
       }
     ],
     "interior": {
-      "shelves": 4,
+      "shelves": 0,
       "shelf_mode": "adjustable",
       "shelf_setback": 20.0,
       "dividers": 0,
@@ -114,7 +95,26 @@
 
       ],
       "accessories": [
-
+        {
+          "type": "u_drawer",
+          "z": 20.0,
+          "x": 0.0,
+          "w": 0.0,
+          "count": 1,
+          "angle": 0.0,
+          "depth": 0.0,
+          "note": ""
+        },
+        {
+          "type": "hair_dryer_holder",
+          "z": 200.0,
+          "x": 0.0,
+          "w": 0.0,
+          "count": 1,
+          "angle": 0.0,
+          "depth": 0.0,
+          "note": ""
+        }
       ]
     },
     "corner": {
@@ -126,15 +126,15 @@
       "front_b": true
     },
     "counter": {
-      "on": false,
+      "on": true,
       "t": 20.0,
       "front_oh": 20.0,
       "back_oh": 0.0,
       "oh_l": 0.0,
       "oh_r": 0.0,
-      "edge": "square",
+      "edge": "mitred",
       "edge_size": 3.0,
-      "mitre_t": 60.0,
+      "mitre_t": 80.0,
       "splash": {
         "on": false,
         "h": 60.0,
@@ -144,10 +144,10 @@
       "waterfall_r": false
     },
     "sink": {
-      "on": false,
+      "on": true,
       "mount": "undermount",
-      "w": 800.0,
-      "d": 450.0,
+      "w": 500.0,
+      "d": 380.0,
       "bowl_d": 200.0,
       "bowls": 1,
       "drainer": false,
@@ -166,14 +166,14 @@
       "dy": 0.0
     },
     "materials": {
-      "carcass": "ply_18_natural",
-      "front": "lacquer_white",
+      "carcass": "polywood_18",
+      "front": "fenix_grey",
       "back": "hdf_white",
-      "shelf": "ply_18_natural",
-      "counter": "quartz_white",
+      "shelf": "polywood_18",
+      "counter": "corian_white",
       "drawer_box": "ply_15_natural",
       "plinth": "pvc_black",
-      "hardware": "ss_brushed",
+      "hardware": "black_matt",
       "glass": "glass_clear"
     },
     "hood_style": "chimney",

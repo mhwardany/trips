@@ -92,8 +92,36 @@ module AHW
       OVERLAY_MODES = %w[overlay_full overlay_half inset].freeze
 
       # ------------------------------------------------------------- hardware
-      HANDLE_TYPES = %w[none bar knob edge_pull j_profile gola push_open
-                        recessed_round leather_strap].freeze
+      # Handle catalogue. Every entry is drawn parametrically and takes any
+      # finish from the material library, so the same shape can be brushed
+      # steel on one job and antique brass or oak on the next.
+      HANDLE_TYPES = %w[
+        none
+        bar bar_square t_bar d_handle tubular long_profile
+        knob_round knob_square knob_knurled knob_ceramic knob_crystal
+        cup_pull ring_pull drop_pull shell_pull
+        edge_pull finger_pull j_profile gola push_open
+        recessed_round recessed_rect
+        leather_strap timber_dowel mid_century
+      ].freeze
+
+      # Handles whose geometry reads horizontally by nature (cup pulls, edge
+      # profiles), regardless of the position setting.
+      HANDLE_ALWAYS_HORIZONTAL = %w[cup_pull shell_pull long_profile
+                                    finger_pull j_profile gola].freeze
+
+      # Handles that need no leaf-mounted geometry at all.
+      HANDLE_NONE = %w[none j_profile gola push_open].freeze
+
+      # Finishes offered for handles in the dialog, in the order a spec sheet
+      # would list them.
+      HANDLE_FINISHES = %w[
+        ss_brushed chrome black_matt alu_anodised gunmetal
+        brass_brushed brass_polished gold_pvd rose_gold copper bronze_antique
+        nickel_satin white_matt ivory
+        ceramic_white crystal_clear
+        oak_handle walnut_handle leather_tan leather_black
+      ].freeze
 
       RUNNER_TYPES = {
         'roller'   => { 'side' => 12.5, 'bottom' => 12.0, 'back' => 20.0, 'label' => 'Roller runner (economy)' },
@@ -104,6 +132,9 @@ module AHW
 
       HINGE_TYPES = %w[clip_top_110 clip_top_155 blumotion_110 thick_door_95
                        glass_door_170 pie_corner].freeze
+
+      # Design styles live in Styles::SPECS - that module owns the list so
+      # the names and the specs they map to can never drift apart.
 
       # --------------------------------------------------------------- glass
       GLASS_TYPES = {
@@ -118,12 +149,14 @@ module AHW
       }.freeze
 
       # ------------------------------------------------------------ interior
-      INTERIOR_ACCESSORIES = %w[shelf divider hanging_rail double_rail pull_down_rail
-                                trouser_rack tie_rack shoe_shelf wire_basket
-                                cutlery_tray plate_rack pull_out_larder
-                                magic_corner carousel waste_bin laundry_basket
-                                jewellery_drawer glass_shelf led_strip mirror_panel
-                                open_niche safe_box vanity_drawer].freeze
+      INTERIOR_ACCESSORIES = %w[
+        shelf glass_shelf divider open_niche led_strip mirror_panel safe_box
+        hanging_rail double_rail pull_down_rail trouser_rack tie_rack belt_rack
+        valet_rod shoe_shelf jewellery_drawer watch_box pull_out_table
+        wire_basket laundry_basket cutlery_tray plate_rack spice_rack
+        bottle_pullout pull_out_larder magic_corner carousel waste_bin
+        vanity_drawer u_drawer towel_rail tissue_niche hair_dryer_holder
+      ].freeze
 
       # ---------------------------------------------------------- appliances
       # nominal cut-out envelope in mm [w, h, d]

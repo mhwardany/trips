@@ -1,11 +1,12 @@
 {
   "name": "K Wall lift 900 Aventos HF glass",
-  "saved": "2026-09-09 09:37",
-  "plugin": "1.0.0",
+  "saved": "2026-09-09 12:34",
+  "plugin": "1.1.0",
   "params": {
     "schema": 3,
     "type": "wall_lift",
     "family": "kitchen",
+    "style": "modern",
     "name": "K Wall lift 900 Aventos HF glass",
     "w": 900.0,
     "h": 480.0,
@@ -27,7 +28,8 @@
       "setback": 50.0,
       "leg_dia": 40.0,
       "returns": false,
-      "shadow": 0.0
+      "shadow": 0.0,
+      "led": false
     },
     "front": {
       "mode": "overlay_full",
@@ -36,6 +38,7 @@
       "style": "glass_frame",
       "radius": 0.0,
       "show_hinges": true,
+      "hinge_type": "blumotion_110",
       "shaker": {
         "rail": 70.0,
         "panel_t": 8.0,

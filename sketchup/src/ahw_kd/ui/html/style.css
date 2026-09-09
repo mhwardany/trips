@@ -252,3 +252,23 @@ tfoot td { font-weight: 700; color: var(--accent-2); }
 #preview .dim { stroke: #6f7885; stroke-width: .6; }
 #preview text { fill: var(--muted); font-size: 8px; font-family: inherit; }
 #preview text.tag { fill: var(--accent-2); font-size: 7.5px; }
+
+/* ----------------------------------------------------------- style chips */
+.style-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+.style-chip {
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.style-chip:hover { border-color: var(--accent); color: var(--accent-2); }
+.style-chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #14171c;
+  font-weight: 600;
+}

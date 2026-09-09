@@ -14,6 +14,7 @@ module AHW
           'schema'   => Const::SCHEMA,
           'type'     => 'base',
           'family'   => 'kitchen',
+          'style'    => 'modern',   # see Styles::SPECS
           'name'     => '',
           'w'        => 600.0,
           'h'        => 720.0,
@@ -33,12 +34,13 @@ module AHW
           'scribe'    => 20.0,
 
           'plinth' => {
-            'mode'     => 'panel',    # panel | legs | none | floating
+            'mode'     => 'panel',    # panel | legs | floating | wall_hung | none
             'h'        => 150.0,
             'setback'  => 50.0,
             'leg_dia'  => 40.0,
             'returns'  => false,      # fit plinth returns on exposed ends
-            'shadow'   => 0.0         # floating: shadow gap under carcass
+            'shadow'   => 0.0,        # floating / wall_hung: shadow gap height
+            'led'      => false       # LED strip washing the shadow gap
           },
 
           # fronts ---------------------------------------------------------
@@ -49,6 +51,7 @@ module AHW
             'style'      => 'slab',          # see Const::DOOR_STYLES
             'radius'     => 0.0,
             'show_hinges'=> true,
+            'hinge_type' => 'blumotion_110',
             'shaker'     => { 'rail' => 70.0, 'panel_t' => 8.0, 'panel_inset' => 10.0 },
             'ribbed'     => { 'pitch' => 30.0, 'depth' => 4.0 },
             'glass'      => {
@@ -379,22 +382,28 @@ module AHW
         params['h'] = Util.clamp(Util.num(params['h'], 720.0), 80.0, 3600.0)
         params['d'] = Util.clamp(Util.num(params['d'], 560.0), 60.0, 1500.0)
 
-        %w[panel_t front_t back_t shelf_t rail_w back_inset scribe].each do |key|
+        %w[panel_t front_t back_t shelf_t rail_w back_inset].each do |key|
           params[key] = Util.clamp(Util.num(params[key], 18.0), 1.0, 100.0)
         end
+        params['scribe'] = Util.clamp(Util.num(params['scribe'], 20.0), 0.0, 200.0)
+        params['side_mode'] = 'full' unless %w[full scribe].include?(params['side_mode'])
 
         plinth = params['plinth']
         plinth['h']       = Util.clamp(Util.num(plinth['h'], 100.0), 0.0, 400.0)
         plinth['setback'] = Util.clamp(Util.num(plinth['setback'], 50.0), 0.0, 200.0)
         plinth['leg_dia'] = Util.clamp(Util.num(plinth['leg_dia'], 40.0), 10.0, 120.0)
         plinth['returns'] = Util.bool(plinth['returns'], false)
-        plinth['h']       = 0.0 if plinth['mode'] == 'none'
+        plinth['led']     = Util.bool(plinth['led'], false)
+        plinth['shadow']  = Util.clamp(Util.num(plinth['shadow'], 0.0), 0.0, 200.0)
+        plinth['mode']    = 'panel' unless %w[panel legs floating wall_hung none].include?(plinth['mode'])
+        plinth['h']       = 0.0 if %w[none wall_hung].include?(plinth['mode'])
 
         front = params['front']
         front['gap']        = Util.clamp(Util.num(front['gap'], 3.0), 0.0, 30.0)
         front['reveal_top'] = Util.num(front['reveal_top'], 0.0)
         front['radius']     = Util.clamp(Util.num(front['radius'], 0.0), 0.0, 40.0)
         front['show_hinges'] = Util.bool(front['show_hinges'], true)
+        front['hinge_type'] = 'blumotion_110' unless Const::HINGE_TYPES.include?(front['hinge_type'])
         front['mode']       = 'overlay_full' unless Const::OVERLAY_MODES.include?(front['mode'])
         front['style']      = 'slab' unless Const::DOOR_STYLES.include?(front['style'])
         %w[rail panel_t panel_inset].each { |k| front['shaker'][k] = Util.num(front['shaker'][k], 10.0) }
@@ -460,6 +469,7 @@ module AHW
         open['lifts']   = Util.clamp(Util.num(open['lifts'], 0.0), 0.0, 100.0)
         params['explode'] = Util.clamp(Util.num(params['explode'], 0.0), 0.0, 600.0)
 
+        params['style'] = 'modern' unless Styles::SPECS.key?(params['style'])
         params['meta']['qty'] = Util.clamp(Util.int(params['meta']['qty'], 1), 1, 999)
         params['name'] = auto_name(params) if params['name'].to_s.strip.empty?
         params['schema'] = Const::SCHEMA

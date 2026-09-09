@@ -13,7 +13,7 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.0.0'
+    PLUGIN_VERSION = '1.1.0'
 
     PATH_ROOT = File.dirname(__FILE__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze

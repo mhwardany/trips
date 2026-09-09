@@ -203,10 +203,178 @@ module AHW
                                     w: [width, 450.0].min, d: 400.0, h: 350.0,
                                     length: 450.0, width: 400.0, thick: 350.0)
 
+          when 'divider'
+            Geom3.part(ents, model, name: 'Divider', part: 'Divider',
+                                    material: layout.material('carcass'),
+                                    x: x, y: layout.cavity_y0, z: z,
+                                    w: layout.t, d: layout.cavity_y1 - layout.cavity_y0,
+                                    h: layout.inner_z1 - z,
+                                    length: layout.inner_z1 - z,
+                                    width: layout.cavity_y1 - layout.cavity_y0,
+                                    thick: layout.t, grain: 'height', edges: 'front')
+
+          when 'belt_rack', 'valet_rod'
+            group = Geom3.group_with(ents, humanise_name(accessory['type']))
+            gents = group.entities
+            reach = depth(layout, accessory, layout.cavity_y1 - layout.cavity_y0 - 40.0)
+            if accessory['type'] == 'valet_rod'
+              Geom3.cylinder(gents, [x + 30.0, layout.cavity_y0 + 20.0, z], 8.0, reach, :y, 12)
+              Geom3.box(gents, x, layout.cavity_y0, z - 20.0, 20.0, 40.0, 40.0)
+            else
+              Geom3.box(gents, x, layout.cavity_y0, z, 20.0, reach, 20.0)
+              hooks = Util.clamp(accessory['count'], 1, 12)
+              hooks.times do |i|
+                Geom3.cylinder(gents, [x + 10.0, layout.cavity_y0 + 30.0 + i * 45.0, z - 30.0],
+                               5.0, 30.0, :z, 8)
+              end
+            end
+            Geom3.finish_part(group, model, name: humanise_name(accessory['type']),
+                                            part: 'Accessory', material: 'ss_brushed',
+                                            dims: [20.0, reach, 40.0],
+                                            length: reach, width: 40.0, thick: 20.0,
+                                            note: 'side mounted, pull-out')
+
+          when 'watch_box'
+            d = depth(layout, accessory, 320.0)
+            group = Geom3.group_with(ents, 'Watch Box')
+            gents = group.entities
+            cells = Util.clamp(accessory['count'], 1, 10)
+            step = [width / cells.to_f, 60.0].max
+            cells.times do |i|
+              Geom3.tube(gents, x + i * step, layout.cavity_y0, z, step - 6.0, d, 70.0, 6.0)
+              Geom3.cylinder(gents, [x + i * step + step / 2.0 - 3.0,
+                                     layout.cavity_y0 + d / 2.0, z + 10.0],
+                             22.0, 45.0, :z, 16)
+            end
+            Geom3.finish_part(group, model, name: 'Watch Box', part: 'Accessory',
+                                            material: 'mfc_walnut',
+                                            dims: [width, d, 70.0],
+                                            length: width, width: d, thick: 70.0,
+                                            note: "#{cells} cushions")
+
+          when 'pull_out_table'
+            d = depth(layout, accessory, layout.cavity_y1 - layout.cavity_y0 - 20.0)
+            group = Geom3.group_with(ents, 'Pull Out Table')
+            gents = group.entities
+            Geom3.box(gents, x, layout.cavity_y0, z, width, d, 18.0)
+            [x + 4.0, x + width - 16.0].each do |rx|
+              Geom3.box(gents, rx, layout.cavity_y0, z - 20.0, 12.0, d, 20.0)
+            end
+            Geom3.finish_part(group, model, name: 'Pull Out Table', part: 'Accessory',
+                                            material: layout.material('shelf'),
+                                            dims: [width, d, 18.0],
+                                            length: width, width: d, thick: 18.0,
+                                            note: 'full extension pull-out worktop')
+
+          when 'spice_rack'
+            d = depth(layout, accessory, 120.0)
+            tiers = Util.clamp(accessory['count'], 1, 8)
+            group = Geom3.group_with(ents, 'Spice Rack')
+            gents = group.entities
+            tiers.times do |i|
+              tz = z + i * 140.0
+              Geom3.box(gents, x, layout.cavity_y0, tz, width, d, 16.0)
+              Geom3.box(gents, x, layout.cavity_y0 + d - 10.0, tz, width, 10.0, 45.0)
+            end
+            Geom3.finish_part(group, model, name: 'Spice Rack', part: 'Accessory',
+                                            material: layout.material('shelf'),
+                                            dims: [width, d, 16.0],
+                                            length: width, width: d, thick: 16.0,
+                                            qty: tiers, note: 'door mounted spice tiers')
+
+          when 'bottle_pullout'
+            d = depth(layout, accessory, layout.cavity_y1 - layout.cavity_y0 - 40.0)
+            height = layout.inner_z1 - z
+            group = Geom3.group_with(ents, 'Bottle Pull Out')
+            gents = group.entities
+            narrow = [width, 200.0].min
+            Geom3.tube(gents, x, layout.cavity_y0, z, narrow, d, height, 10.0)
+            tiers = Util.clamp(accessory['count'], 1, 8)
+            tiers.times do |i|
+              Geom3.box(gents, x + 10.0, layout.cavity_y0 + 10.0,
+                        z + (height / (tiers + 1).to_f) * (i + 1),
+                        narrow - 20.0, d - 20.0, 12.0)
+            end
+            Geom3.finish_part(group, model, name: 'Bottle Pull Out', part: 'Accessory',
+                                            material: 'chrome',
+                                            dims: [narrow, d, height],
+                                            length: narrow, width: d, thick: height,
+                                            note: 'tall narrow pull-out, full extension')
+
+          # ------------------------------------------------ bathroom fit-out
+          when 'u_drawer'
+            # a drawer that wraps around the basin trap: two side pockets and
+            # a low bridge across the front
+            d = depth(layout, accessory, layout.cavity_y1 - layout.cavity_y0 - 60.0)
+            group = Geom3.group_with(ents, 'U Drawer')
+            gents = group.entities
+            height = 160.0
+            cut = Util.clamp(accessory['w'].positive? ? accessory['w'] : width * 0.4,
+                             80.0, width - 120.0)
+            side = (width - cut) / 2.0
+            [x, x + width - side].each do |sx|
+              Geom3.tube(gents, sx, layout.cavity_y0, z, side, d, height, 15.0)
+              Geom3.box(gents, sx, layout.cavity_y0, z, side, d, 15.0)
+            end
+            Geom3.box(gents, x + side, layout.cavity_y0 + d - 15.0, z, cut, 15.0, height)
+            Geom3.finish_part(group, model, name: 'U Drawer', part: 'Drawer Box',
+                                            material: layout.material('drawer_box'),
+                                            dims: [width, d, height],
+                                            length: width, width: d, thick: height,
+                                            note: "U cut-out #{cut.round} mm for the trap")
+
+          when 'towel_rail'
+            group = Geom3.group_with(ents, 'Towel Rail')
+            gents = group.entities
+            reach = depth(layout, accessory, 300.0)
+            bars = Util.clamp(accessory['count'], 1, 4)
+            bars.times do |i|
+              Geom3.cylinder(gents, [x + 20.0, layout.cavity_y1 - 40.0 - i * 60.0, z],
+                             10.0, [width - 40.0, 40.0].max, :x, 12)
+            end
+            [x, x + width - 20.0].each do |bx|
+              Geom3.box(gents, bx, layout.cavity_y1 - 60.0, z - 30.0, 20.0, 50.0, 60.0)
+            end
+            Geom3.finish_part(group, model, name: 'Towel Rail', part: 'Accessory',
+                                            material: 'chrome',
+                                            dims: [width, reach, 20.0],
+                                            length: width, width: 20.0, thick: 20.0,
+                                            qty: bars, note: 'pull-out towel rail')
+
+          when 'tissue_niche'
+            d = depth(layout, accessory, 140.0)
+            group = Geom3.group_with(ents, 'Tissue Niche')
+            gents = group.entities
+            niche_w = [width, 280.0].min
+            Geom3.tube(gents, x, layout.cavity_y0, z, niche_w, d, 160.0, 12.0)
+            Geom3.box(gents, x, layout.cavity_y0, z, niche_w, d, 12.0)
+            Geom3.finish_part(group, model, name: 'Tissue Niche', part: 'Accessory',
+                                            material: layout.material('carcass'),
+                                            dims: [niche_w, d, 160.0],
+                                            length: niche_w, width: d, thick: 160.0,
+                                            note: 'concealed tissue / bin niche')
+
+          when 'hair_dryer_holder'
+            d = depth(layout, accessory, 180.0)
+            group = Geom3.group_with(ents, 'Hair Dryer Holder')
+            gents = group.entities
+            Geom3.cylinder(gents, [x + 60.0, layout.cavity_y0 + d / 2.0, z], 55.0, 12.0, :z, 20)
+            Geom3.tube(gents, x + 10.0, layout.cavity_y0 + d / 2.0 - 50.0, z, 100.0, 100.0, 130.0, 6.0)
+            Geom3.box(gents, x, layout.cavity_y0, z + 150.0, 120.0, 60.0, 40.0)
+            Geom3.finish_part(group, model, name: 'Hair Dryer Holder', part: 'Accessory',
+                                            material: 'ss_brushed',
+                                            dims: [120.0, d, 190.0],
+                                            length: 120.0, width: d, thick: 190.0,
+                                            note: 'with socket box above')
+
           when 'cutlery_tray', 'plate_rack', 'vanity_drawer'
             d = depth(layout, accessory, layout.cavity_y1 - layout.cavity_y0 - 60.0)
             Drawer.insert(ents, model, accessory['type'], x, layout.cavity_y0, z, width, d, 120.0)
           end
+        end
+
+        def humanise_name(key)
+          key.to_s.split('_').map(&:capitalize).join(' ')
         end
 
         def rail(ents, model, layout, x, width, z, accessory)

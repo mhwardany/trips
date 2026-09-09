@@ -66,6 +66,7 @@ module AHW
             dialog.add_action_callback('pick_block')     { |_ctx, key| pick_block(key) }
             dialog.add_action_callback('clear_block')    { |_ctx, key| Builders::Appliance.library_set(key, ''); send_blocks }
             dialog.add_action_callback('defaults')       { |_ctx, type| send_defaults(type) }
+            dialog.add_action_callback('apply_style')    { |_ctx, json| apply_style(json) }
             dialog.add_action_callback('zoom')           { |_ctx| Sketchup.active_model&.active_view&.zoom_extents }
           end
 
@@ -84,6 +85,11 @@ module AHW
                    'materials'  => Materials.catalogue,
                    'styles'     => Const::DOOR_STYLES,
                    'handles'    => Const::HANDLE_TYPES,
+                   'hinges'     => Const::HINGE_TYPES,
+                   'finishes'   => Const::HANDLE_FINISHES.map do |key|
+                     { 'key' => key, 'label' => Materials.label(key) }
+                   end,
+                   'styles_design' => Styles.catalogue,
                    'runners'    => Const::RUNNER_TYPES.map { |k, v| { 'key' => k, 'label' => v['label'] } },
                    'lifts'      => Const::LIFT_SYSTEMS.map { |k, v| { 'key' => k, 'label' => v } },
                    'kinds'      => Const::FRONT_KINDS,
@@ -107,6 +113,16 @@ module AHW
 
           def send_defaults(type)
             call('params', Params.defaults(type.to_s))
+          end
+
+          # Applying a design style is a params transform, not a model edit:
+          # the dialog gets the new params back and decides what to do with it.
+          def apply_style(json)
+            payload = parse(json)
+            return unless payload
+
+            params = Params.normalize(payload['params'] || {})
+            call('params', Styles.apply(params, payload['style']))
           end
 
           def push_selection

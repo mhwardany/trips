@@ -6,7 +6,7 @@ require 'json'
 module AHW
   module KD
     %w[
-      core/const core/util core/log core/params core/materials core/geom
+      core/const core/util core/log core/styles core/params core/materials core/geom
       core/layout core/store
       builders/panel builders/drawer builders/appliance builders/carcass
       builders/fronts builders/interior builders/worktop builders/special
