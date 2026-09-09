@@ -1,0 +1,199 @@
+{
+  "name": "K Tall larder 600",
+  "saved": "2026-09-09 09:37",
+  "plugin": "1.0.0",
+  "params": {
+    "schema": 3,
+    "type": "tall",
+    "family": "kitchen",
+    "name": "K Tall larder 600",
+    "w": 600.0,
+    "h": 2100.0,
+    "d": 580.0,
+    "panel_t": 18.0,
+    "front_t": 18.0,
+    "back_t": 6.0,
+    "shelf_t": 18.0,
+    "back_mode": "grooved",
+    "back_inset": 12.0,
+    "top_mode": "rails",
+    "rail_w": 100.0,
+    "bottom_mode": "full",
+    "side_mode": "full",
+    "scribe": 20.0,
+    "plinth": {
+      "mode": "panel",
+      "h": 150.0,
+      "setback": 50.0,
+      "leg_dia": 40.0,
+      "returns": false,
+      "shadow": 0.0
+    },
+    "front": {
+      "mode": "overlay_full",
+      "gap": 3.0,
+      "reveal_top": 0.0,
+      "style": "slab",
+      "radius": 0.0,
+      "show_hinges": true,
+      "shaker": {
+        "rail": 70.0,
+        "panel_t": 8.0,
+        "panel_inset": 10.0
+      },
+      "ribbed": {
+        "pitch": 30.0,
+        "depth": 4.0
+      },
+      "glass": {
+        "type": "clear",
+        "frame": "aluminium",
+        "frame_w": 24.0,
+        "frame_t": 20.0,
+        "glass_t": 5.0
+      },
+      "handle": {
+        "type": "bar",
+        "length": 160.0,
+        "proj": 32.0,
+        "dia": 14.0,
+        "pos": "top",
+        "offset": 50.0,
+        "material": "ss_brushed"
+      }
+    },
+    "rows": [
+      {
+        "kind": "door",
+        "h": 1250.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": null,
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "tandem",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      },
+      {
+        "kind": "door",
+        "h": 0.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": null,
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "tandem",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      }
+    ],
+    "interior": {
+      "shelves": 0,
+      "shelf_mode": "adjustable",
+      "shelf_setback": 20.0,
+      "dividers": 0,
+      "divider_at": [
+
+      ],
+      "accessories": [
+        {
+          "type": "pull_out_larder",
+          "z": 20.0,
+          "x": 0.0,
+          "w": 0.0,
+          "count": 5,
+          "angle": 0.0,
+          "depth": 0.0,
+          "note": ""
+        }
+      ]
+    },
+    "corner": {
+      "mode": "blind",
+      "side": "left",
+      "blind_w": 300.0,
+      "return_w": 900.0,
+      "return_d": 560.0,
+      "front_b": true
+    },
+    "counter": {
+      "on": false,
+      "t": 20.0,
+      "front_oh": 20.0,
+      "back_oh": 0.0,
+      "oh_l": 0.0,
+      "oh_r": 0.0,
+      "edge": "square",
+      "edge_size": 3.0,
+      "mitre_t": 60.0,
+      "splash": {
+        "on": false,
+        "h": 60.0,
+        "t": 18.0
+      },
+      "waterfall_l": false,
+      "waterfall_r": false
+    },
+    "sink": {
+      "on": false,
+      "mount": "undermount",
+      "w": 800.0,
+      "d": 450.0,
+      "bowl_d": 200.0,
+      "bowls": 1,
+      "drainer": false,
+      "dx": 0.0,
+      "dy": 0.0,
+      "tap": true,
+      "tap_h": 300.0
+    },
+    "hob": {
+      "on": false,
+      "kind": "gas",
+      "w": 580.0,
+      "d": 500.0,
+      "burners": 4,
+      "dx": 0.0,
+      "dy": 0.0
+    },
+    "materials": {
+      "carcass": "ply_18_natural",
+      "front": "lacquer_white",
+      "back": "hdf_white",
+      "shelf": "ply_18_natural",
+      "counter": "quartz_white",
+      "drawer_box": "ply_15_natural",
+      "plinth": "pvc_black",
+      "hardware": "ss_brushed",
+      "glass": "glass_clear"
+    },
+    "hood_style": "chimney",
+    "open": {
+      "doors": 0.0,
+      "drawers": 0.0,
+      "lifts": 0.0
+    },
+    "explode": 0.0,
+    "meta": {
+      "code": "",
+      "room": "",
+      "note": "",
+      "qty": 1
+    }
+  }
+}
