@@ -10,7 +10,11 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.1.0'
+    PLUGIN_VERSION = '1.2.0'
+    PLUGIN_COMPANY = 'AHW Architects Masr'
+    PLUGIN_AUTHOR  = 'Mahmoud Al wardany'
+    PLUGIN_AUTHOR_AR = 'محمود الوردانى'
+    PLUGIN_WEBSITE = 'https://ahwspaces.com'
     PATH_ROOT = File.expand_path('../src', __dir__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
     PATH_HTML = File.join(PATH_LIB, 'ui', 'html').freeze
@@ -143,6 +147,49 @@ preset('D Dressing island 1200', 'island_dresser',
 
 preset('D Corner wardrobe L 1000', 'corner_wardrobe',
        'corner' => { 'mode' => 'l', 'return_w' => 1400.0, 'return_d' => 600.0, 'front_b' => true })
+
+# --------------------------------------------------- v1.2 unit showcase
+preset('K Tall drawers + oven + microwave 600', 'tall',
+       'h' => 2100.0,
+       'rows' => [Params.row('drawer', 'h' => 180.0, 'drawer' => { 'runner' => 'legrabox' }),
+                  Params.row('drawer', 'h' => 180.0, 'drawer' => { 'runner' => 'legrabox' }),
+                  Params.row('appliance', 'appl' => 'oven'),
+                  Params.row('appliance', 'appl' => 'microwave'),
+                  Params.row('door', 'h' => 0.0),
+                  Params.row('lift', 'h' => 350.0, 'lift' => 'hk', 'hinge' => 'top')])
+
+preset('K Chamfer end unit 400', 'base_chamfer',
+       'chamfer' => { 'side' => 'right', 'depth' => 350.0, 'front' => 220.0 })
+
+preset('K Wall corner diagonal 600', 'wall_corner',
+       'corner' => { 'mode' => 'diagonal', 'return_w' => 600.0, 'return_d' => 350.0 })
+
+preset('K Wall aluminium glass door 600', 'wall',
+       'front' => { 'style' => 'glass_frame',
+                    'glass' => { 'frame' => 'aluminium', 'profile' => 'slim',
+                                 'infill' => 'glass', 'type' => 'smoked',
+                                 'frame_w' => 22.0, 'div_h' => 2, 'div_v' => 1 } })
+
+preset('K Wall louvre door 600', 'wall', 'front' => { 'style' => 'louvre' })
+
+preset('K Base handleless gola 600', 'base',
+       'front' => { 'style' => 'slab',
+                    'handle' => { 'type' => 'profile_c', 'mount' => 'hidden',
+                                  'proj' => 26.0, 'dia' => 14.0,
+                                  'material' => 'black_matt' } })
+
+preset('K Base aluminium J profile 600', 'base',
+       'front' => { 'handle' => { 'type' => 'profile_j', 'mount' => 'built_in',
+                                  'proj' => 24.0, 'dia' => 13.0,
+                                  'material' => 'alu_anodised' } })
+
+preset('B Vanity wall hung 900 suspended', 'vanity_wall',
+       'w' => 900.0,
+       'plinth' => { 'mode' => 'wall_hung', 'led' => true },
+       'interior' => { 'accessories' => [Params.accessory('u_drawer', 'z' => 20.0),
+                                         Params.accessory('towel_rail', 'z' => 300.0),
+                                         Params.accessory('tissue_niche', 'z' => 40.0,
+                                                          'x' => 600.0, 'w' => 250.0)] })
 
 # ------------------------------------------------------- style showcase
 # One unit per design style, so the whole palette is one click away.

@@ -1,12 +1,13 @@
 {
   "name": "S Neo classic base 600",
-  "saved": "2026-09-09 12:34",
-  "plugin": "1.1.0",
+  "saved": "2026-09-09 12:55",
+  "plugin": "1.2.0",
   "params": {
     "schema": 3,
     "type": "base",
     "family": "kitchen",
     "style": "neo_classic",
+    "insert": "back_left",
     "name": "S Neo classic base 600",
     "w": 600.0,
     "h": 720.0,
@@ -51,24 +52,32 @@
       "glass": {
         "type": "clear",
         "frame": "aluminium",
+        "profile": "slim",
+        "infill": "glass",
         "frame_w": 24.0,
         "frame_t": 20.0,
-        "glass_t": 5.0
+        "glass_t": 5.0,
+        "div_h": 0,
+        "div_v": 0,
+        "bar_w": 18.0,
+        "panel": "lacquer_white"
       },
       "handle": {
         "type": "drop_pull",
+        "mount": "applied",
         "length": 120.0,
         "proj": 34.0,
         "dia": 12.0,
         "pos": "centre",
+        "side": "auto",
         "offset": 70.0,
         "material": "gold_pvd"
       }
     },
     "rows": [
       {
-        "kind": "drawer",
-        "h": 140.0,
+        "kind": "door",
+        "h": 0.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
@@ -86,8 +95,8 @@
         "note": ""
       },
       {
-        "kind": "door",
-        "h": 0.0,
+        "kind": "drawer",
+        "h": 140.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
@@ -124,6 +133,11 @@
       "return_w": 900.0,
       "return_d": 560.0,
       "front_b": true
+    },
+    "chamfer": {
+      "side": "right",
+      "depth": 300.0,
+      "front": 200.0
     },
     "counter": {
       "on": true,

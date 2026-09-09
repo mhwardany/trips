@@ -10,16 +10,16 @@ module AHW
 
         def footprint(layout)
           spec = layout.params['corner']
-          w = layout.w
-          d = layout.d
-          rw = spec['return_w'].to_f
-          rd = spec['return_d'].to_f
-          [[0.0, 0.0], [w, 0.0], [w, d], [rd, rw], [0.0, rw]]
+          [[0.0, 0.0], [layout.w, 0.0], [layout.w, layout.d],
+           [spec['return_d'].to_f, spec['return_w'].to_f], [0.0, spec['return_w'].to_f]]
         end
 
+        # The diagonal face is the edge between points 2 and 3.
+        FACE_INDEX = 2
+
         def diagonal_points(layout)
-          spec = layout.params['corner']
-          [[layout.w, layout.d], [spec['return_d'].to_f, spec['return_w'].to_f]]
+          points = footprint(layout)
+          [points[2], points[3]]
         end
 
         def build(entities, model, layout)
@@ -33,21 +33,9 @@ module AHW
           ents = group.entities
           points = footprint(layout)
 
-          if layout.bottom_t.positive?
-            bottom = Geom3.group_with(ents, 'Bottom')
-            Geom3.prism_z(bottom.entities, points, layout.z0, t)
-            Geom3.finish_part(bottom, model, name: 'Bottom', part: 'Bottom', material: material,
-                                             dims: [layout.w, rw, t],
-                                             length: layout.w, width: rw, thick: t)
-          end
-          if layout.top_t.positive?
-            top = Geom3.group_with(ents, 'Top')
-            Geom3.prism_z(top.entities, points, layout.z1 - t, t)
-            Geom3.finish_part(top, model, name: 'Top', part: 'Top', material: material,
-                                          dims: [layout.w, rw, t],
-                                          length: layout.w, width: rw, thick: t)
-          end
+          Faceted.shell(ents, model, layout, points, 'Corner')
 
+          # gables close the two open ends where the neighbouring runs meet
           Geom3.part(ents, model, name: 'Side A', part: 'Gable', material: material,
                                   x: layout.w - t, y: 0.0, z: layout.z0,
                                   w: t, d: layout.d, h: layout.h,
@@ -68,94 +56,18 @@ module AHW
                                     length: rw, width: layout.inner_h, thick: layout.back_t)
           end
 
-          shelf_prism(ents, model, layout, points)
+          Faceted.shelves(ents, model, layout, points, 'corner')
           Carcass.plinth(entities, model, layout)
           group
         end
 
-        def shelf_prism(ents, model, layout, points)
-          count = layout.params['interior']['shelves'].to_i
-          return if count <= 0
-
-          inset = layout.t + 4.0
-          shrunk = points.map do |(x, y)|
-            [Util.clamp(x, inset, 1.0e6), Util.clamp(y, inset, 1.0e6)]
-          end
-          spacing = layout.inner_h / (count + 1).to_f
-          count.times do |i|
-            z = layout.inner_z0 + spacing * (i + 1) - layout.shelf_t / 2.0
-            shelf = Geom3.group_with(ents, 'Shelf')
-            Geom3.prism_z(shelf.entities, shrunk, z, layout.shelf_t)
-            Geom3.finish_part(shelf, model, name: 'Shelf', part: 'Shelf',
-                                            material: layout.material('shelf'),
-                                            dims: [layout.w, layout.params['corner']['return_w'].to_f,
-                                                   layout.shelf_t],
-                                            length: layout.w, width: layout.d,
-                                            thick: layout.shelf_t, note: 'corner shelf, cut to shape')
-          end
-        end
-
-        # The door lives on the 45 degree face; it is drawn flat and then
-        # rotated into the diagonal plane.
         def fronts(entities, model, layout)
           p1, p2 = diagonal_points(layout)
-          dx = p1[0] - p2[0]
-          dy = p1[1] - p2[1]
-          length = Math.sqrt(dx * dx + dy * dy)
-          return if length <= 100.0
-
-          angle = Math.atan2(dy, dx) * 180.0 / Math::PI
-          row = layout.params['rows'].first
-          leaf_w = length - 2 * layout.gap
-
-          group = Geom3.group_with(entities, 'Fronts')
-          leaf = Panel.build(group.entities, model, layout,
-                             name: 'Corner Door', part: 'Door',
-                             x: layout.gap, y: 0.0, z: layout.z0,
-                             w: leaf_w, h: layout.h,
-                             style: row ? row['style'] : nil,
-                             handle_horizontal: false)
-          return unless leaf
-
-          hinge = row ? row['hinge'] : 'left'
-          Fronts.swing!(leaf, hinge, layout.gap, layout.gap + leaf_w,
-                        layout.z0, layout.z1, 0.0, layout.params['open']['doors'].to_f)
-
-          Geom3.rotate!(group, ORIGIN, ::Geom::Vector3d.new(0, 0, 1), angle)
-          Geom3.move!(group, p2[0], p2[1], 0.0)
-          group
+          Faceted.face_fronts(entities, model, layout, p1, p2, 'Fronts')
         end
 
         def worktop(entities, model, layout)
-          return unless layout.counter?
-
-          spec = layout.params['counter']
-          overhang = layout.front_t + spec['front_oh'].to_f
-          points = footprint(layout)
-          # push the diagonal edge outward along its normal
-          p1 = points[2]
-          p2 = points[3]
-          nx = (p2[1] - p1[1])
-          ny = -(p2[0] - p1[0])
-          length = Math.sqrt(nx * nx + ny * ny)
-          return if length.zero?
-
-          nx = nx / length * overhang
-          ny = ny / length * overhang
-          nx = -nx if nx.negative?
-          ny = -ny if ny.negative?
-          expanded = [points[0], [points[1][0], points[1][1]],
-                      [p1[0] + nx, p1[1] + ny], [p2[0] + nx, p2[1] + ny], points[4]]
-
-          group = Geom3.group_with(entities, 'Worktop')
-          Geom3.prism_z(group.entities, expanded, layout.counter_z - spec['t'].to_f, spec['t'].to_f)
-          Geom3.finish_part(group, model, name: 'Worktop', part: 'Worktop',
-                                          material: layout.material('counter'),
-                                          dims: [layout.w, layout.params['corner']['return_w'].to_f,
-                                                 spec['t'].to_f],
-                                          length: layout.w, width: layout.d, thick: spec['t'].to_f,
-                                          note: 'diagonal corner top')
-          group
+          Faceted.face_worktop(entities, model, layout, footprint(layout), FACE_INDEX)
         end
       end
 

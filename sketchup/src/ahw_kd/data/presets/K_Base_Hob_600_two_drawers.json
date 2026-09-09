@@ -1,12 +1,13 @@
 {
   "name": "K Base Hob 600 two drawers",
-  "saved": "2026-09-09 12:34",
-  "plugin": "1.1.0",
+  "saved": "2026-09-09 12:55",
+  "plugin": "1.2.0",
   "params": {
     "schema": 3,
     "type": "base_hob",
     "family": "kitchen",
     "style": "modern",
+    "insert": "back_left",
     "name": "K Base Hob 600 two drawers",
     "w": 600.0,
     "h": 720.0,
@@ -51,16 +52,24 @@
       "glass": {
         "type": "clear",
         "frame": "aluminium",
+        "profile": "slim",
+        "infill": "glass",
         "frame_w": 24.0,
         "frame_t": 20.0,
-        "glass_t": 5.0
+        "glass_t": 5.0,
+        "div_h": 0,
+        "div_v": 0,
+        "bar_w": 18.0,
+        "panel": "lacquer_white"
       },
       "handle": {
         "type": "bar",
+        "mount": "applied",
         "length": 160.0,
         "proj": 32.0,
         "dia": 14.0,
         "pos": "top",
+        "side": "auto",
         "offset": 50.0,
         "material": "ss_brushed"
       }
@@ -68,7 +77,7 @@
     "rows": [
       {
         "kind": "drawer",
-        "h": 180.0,
+        "h": 0.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
@@ -87,7 +96,7 @@
       },
       {
         "kind": "drawer",
-        "h": 0.0,
+        "h": 180.0,
         "cols": 1,
         "hinge": "left",
         "style": null,
@@ -124,6 +133,11 @@
       "return_w": 900.0,
       "return_d": 560.0,
       "front_b": true
+    },
+    "chamfer": {
+      "side": "right",
+      "depth": 300.0,
+      "front": 200.0
     },
     "counter": {
       "on": true,

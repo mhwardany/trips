@@ -272,3 +272,25 @@ tfoot td { font-weight: 700; color: var(--accent-2); }
   color: #14171c;
   font-weight: 600;
 }
+
+/* -------------------------------------------------------------- credit */
+#credit {
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: .02em;
+  padding: 0 0 7px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+#credit a { color: var(--accent-2); text-decoration: none; }
+#credit a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------- pricing table */
+input.rate {
+  width: 84px;
+  padding: 3px 5px;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.row-head input[type=text] { flex: 1; }
+td small { color: var(--muted); }

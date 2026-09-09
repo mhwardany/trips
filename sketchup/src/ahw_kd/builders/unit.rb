@@ -15,8 +15,30 @@ module AHW
           group = parent.add_group
           build_into(group, model, params)
           Store.write(group, params)
+          group.transform!(insert_offset(params)) unless params['insert'] == 'back_left'
           group.transform!(transformation) if transformation
           group
+        end
+
+        # The unit is drawn from its back left corner. If the user wants a
+        # different corner on the cursor, shift the geometry so that corner
+        # lands on the origin.
+        def insert_offset(params)
+          layout = Layout.new(params)
+          w = layout.w
+          d = layout.total_d
+          dx, dy = case params['insert']
+                   when 'back_right'   then [-w, 0.0]
+                   when 'front_left'   then [0.0, -d]
+                   when 'front_right'  then [-w, -d]
+                   when 'back_centre'  then [-w / 2.0, 0.0]
+                   when 'front_centre' then [-w / 2.0, -d]
+                   when 'centre'       then [-w / 2.0, -d / 2.0]
+                   else [0.0, 0.0]
+                   end
+          ::Geom::Transformation.translation(
+            ::Geom::Vector3d.new(Util.mm(dx), Util.mm(dy), 0)
+          )
         end
 
         def rebuild(group, params)
@@ -51,6 +73,11 @@ module AHW
               DiagonalCorner.fronts(entities, model, layout)
               Interior.build(entities, model, layout)
               DiagonalCorner.worktop(entities, model, layout)
+            elsif chamfer?(params)
+              ChamferUnit.build(entities, model, layout)
+              Interior.build(entities, model, layout)
+              ChamferUnit.fronts(entities, model, layout)
+              ChamferUnit.worktop(entities, model, layout)
             else
               Carcass.build(entities, model, layout)
               Interior.build(entities, model, layout)
@@ -65,12 +92,18 @@ module AHW
         end
 
         def diagonal?(params)
-          %w[base_corner corner_wardrobe].include?(params['type']) &&
+          %w[base_corner wall_corner corner_wardrobe].include?(params['type']) &&
             params['corner']['mode'] == 'diagonal'
         end
 
+        def chamfer?(params)
+          %w[base_chamfer wall_chamfer].include?(params['type']) &&
+            params['chamfer']['depth'].to_f >= 5.0 &&
+            params['chamfer']['front'].to_f >= 5.0
+        end
+
         def l_shaped?(params)
-          %w[base_corner corner_wardrobe].include?(params['type']) &&
+          %w[base_corner wall_corner corner_wardrobe].include?(params['type']) &&
             params['corner']['mode'] == 'l'
         end
 
@@ -83,7 +116,11 @@ module AHW
           return if length <= 150.0
 
           sub = Util.deep_dup(layout.params)
-          sub['type']   = layout.params['type'] == 'corner_wardrobe' ? 'wardrobe' : 'base'
+          sub['type'] = case layout.params['type']
+                        when 'corner_wardrobe' then 'wardrobe'
+                        when 'wall_corner' then 'wall'
+                        else 'base'
+                        end
           sub['w']      = length
           sub['d']      = spec['return_d'].to_f
           sub['name']   = "#{layout.params['name']}-R"

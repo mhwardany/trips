@@ -28,9 +28,38 @@ module AHW
 
             Log.guard("row #{index} #{row['kind']}") do
               build_row(ents, model, layout, row, x0, width, z, height, back_y)
+              gola_channel(ents, model, layout, row, x0, width, z, height)
             end
           end
           group
+        end
+
+        # A hidden grip is a channel fixed to the carcass above the leaf, not
+        # hardware on the leaf. Drawing it here keeps the handleless kitchen
+        # honest: the leaf stays plain and the grip is a real aluminium section.
+        def gola_channel(ents, model, layout, row, x, width, z, height)
+          spec = layout.params['front']['handle']
+          return unless spec['mount'] == 'hidden'
+          return if %w[open appliance sliding].include?(row['kind'])
+
+          depth = Util.clamp(spec['proj'].to_f, 12.0, 60.0)
+          face = Util.clamp(spec['dia'].to_f * 2.0, 20.0, 60.0)
+          wall = Util.clamp(depth / 4.0, 1.5, 8.0)
+          y0 = layout.d - depth
+          top = z + height + layout.gap
+          bottom = top - face
+
+          group = Geom3.group_with(ents, 'Gola Channel')
+          section = [[y0, bottom], [y0, top], [y0 + depth, top], [y0 + depth, top - wall],
+                     [y0 + wall, top - wall], [y0 + wall, bottom + wall],
+                     [y0 + depth, bottom + wall], [y0 + depth, bottom]]
+          Geom3.prism_x(group.entities, x, width, section)
+          Geom3.finish_part(group, model,
+                            name: 'Gola Channel', part: 'Gola Profile',
+                            material: layout.material('hardware'),
+                            dims: [width, depth, face],
+                            length: width, width: face, thick: depth,
+                            note: 'carcass mounted handleless grip')
         end
 
         # A blind corner only shows a front over the accessible part.

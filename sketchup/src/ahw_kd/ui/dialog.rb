@@ -67,6 +67,9 @@ module AHW
             dialog.add_action_callback('clear_block')    { |_ctx, key| Builders::Appliance.library_set(key, ''); send_blocks }
             dialog.add_action_callback('defaults')       { |_ctx, type| send_defaults(type) }
             dialog.add_action_callback('apply_style')    { |_ctx, json| apply_style(json) }
+            dialog.add_action_callback('pricing_save')   { |_ctx, json| pricing_save(json) }
+            dialog.add_action_callback('pricing_reset')  { |_ctx| pricing_reset }
+            dialog.add_action_callback('dressing_build') { |_ctx, json| dressing_build(json) }
             dialog.add_action_callback('zoom')           { |_ctx| Sketchup.active_model&.active_view&.zoom_extents }
           end
 
@@ -80,6 +83,17 @@ module AHW
           def send_bootstrap
             call('bootstrap', {
                    'version'    => PLUGIN_VERSION,
+                   'brand'      => { 'company' => PLUGIN_COMPANY, 'author' => PLUGIN_AUTHOR,
+                                     'author_ar' => PLUGIN_AUTHOR_AR,
+                                     'website' => PLUGIN_WEBSITE },
+                   'inserts'    => Const::INSERT_POINTS,
+                   'mounts'     => Const::HANDLE_MOUNTS,
+                   'frame_materials' => Const::FRAME_MATERIALS,
+                   'frame_profiles'  => Const::FRAME_PROFILES,
+                   'frame_infills'   => Const::FRAME_INFILLS,
+                   'dressing_layouts' => Const::DRESSING_LAYOUTS,
+                   'dressing'   => Builders::DressingRoom.defaults,
+                   'pricing'    => Pricing.read(Sketchup.active_model),
                    'families'   => Const::FAMILIES,
                    'envelopes'  => Const::ENVELOPE,
                    'materials'  => Materials.catalogue,
@@ -123,6 +137,42 @@ module AHW
 
             params = Params.normalize(payload['params'] || {})
             call('params', Styles.apply(params, payload['style']))
+          end
+
+          # ------------------------------------------------------------
+          def pricing_save(json)
+            payload = parse(json)
+            return unless payload
+
+            model = Sketchup.active_model
+            data = Pricing.write(model, payload)
+            call('pricing', data)
+            call('boq', Export::Report.boq(model, !model.selection.empty?, data))
+            call('status', { 'ok' => true, 'message' => 'pricing saved' })
+          rescue StandardError => e
+            Log.error(e, 'Dialog.pricing_save')
+            call('status', { 'ok' => false, 'message' => e.message })
+          end
+
+          def pricing_reset
+            model = Sketchup.active_model
+            call('pricing', Pricing.write(model, Pricing.defaults))
+          end
+
+          def dressing_build(json)
+            spec = parse(json)
+            return unless spec
+
+            model = Sketchup.active_model
+            model.start_operation('AHW Dressing Room', true)
+            _room, units = Builders::DressingRoom.build(model, spec)
+            model.commit_operation
+            call('status', { 'ok' => true,
+                             'message' => "dressing room: #{units.size} modules" })
+          rescue StandardError => e
+            model&.abort_operation
+            Log.error(e, 'Dialog.dressing_build')
+            call('status', { 'ok' => false, 'message' => e.message })
           end
 
           def push_selection
@@ -233,6 +283,25 @@ module AHW
               call('status', { 'ok' => !path.nil?, 'message' => path || 'cancelled' })
             when 'boq_view'
               call('boq', Export::Report.boq(model, selection_only))
+            when 'nesting'
+              pricing = Pricing.read(model)
+              rows = Export::Report.cutlist(model, selection_only)
+              results = Export::Nesting.plan(rows, pricing['sheet']['w'], pricing['sheet']['h'])
+              call('nesting', results)
+              path = Export::Report.save(Export::Nesting.csv(results, pricing['currency']),
+                                         'ahw_nesting.csv')
+              call('status', { 'ok' => !path.nil?, 'message' => path || 'cancelled' })
+            when 'nesting_view'
+              pricing = Pricing.read(model)
+              rows = Export::Report.cutlist(model, selection_only)
+              call('nesting', Export::Nesting.plan(rows, pricing['sheet']['w'],
+                                                   pricing['sheet']['h']))
+            when 'job_order'
+              orders = Export::Report.job_order(model, selection_only)
+              path = Export::Report.save(Export::Report.job_order_csv(orders),
+                                         'ahw_job_order.csv')
+              call('status', { 'ok' => !path.nil?, 'message' => path || 'cancelled',
+                               'count' => orders.size })
             end
           rescue StandardError => e
             Log.error(e, 'Dialog.report')

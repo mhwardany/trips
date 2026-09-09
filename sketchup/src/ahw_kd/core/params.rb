@@ -15,6 +15,7 @@ module AHW
           'type'     => 'base',
           'family'   => 'kitchen',
           'style'    => 'modern',   # see Styles::SPECS
+          'insert'   => 'back_left', # which corner lands on the click point
           'name'     => '',
           'w'        => 600.0,
           'h'        => 720.0,
@@ -57,16 +58,24 @@ module AHW
             'glass'      => {
               'type'    => 'clear',
               'frame'   => 'aluminium',      # aluminium | timber | none
+              'profile' => 'slim',           # square | slim | rounded | classic | shadow_gap
+              'infill'  => 'glass',          # glass | panel | mesh | louvre
               'frame_w' => 24.0,
               'frame_t' => 20.0,
-              'glass_t' => 5.0
+              'glass_t' => 5.0,
+              'div_h'   => 0,                # horizontal glazing bars
+              'div_v'   => 0,                # vertical glazing bars
+              'bar_w'   => 18.0,
+              'panel'   => 'lacquer_white'   # infill material when not glass
             },
             'handle' => {
               'type'     => 'bar',
+              'mount'    => 'applied',       # applied | built_in | hidden
               'length'   => 160.0,
               'proj'     => 32.0,
               'dia'      => 14.0,
               'pos'      => 'top',           # top | bottom | left | right | centre
+              'side'     => 'auto',          # auto | left | right (vertical handles)
               'offset'   => 50.0,
               'material' => 'ss_brushed'
             }
@@ -93,6 +102,13 @@ module AHW
             'return_w'  => 900.0,     # diagonal / l: extent along the second wall
             'return_d'  => 560.0,     # l: depth of the return carcass
             'front_b'   => true       # l: fit fronts on the return leg too
+          },
+
+          # chamfered end unit --------------------------------------------
+          'chamfer' => {
+            'side'  => 'right',   # which end is cut back
+            'depth' => 300.0,     # how far the cut runs along the depth
+            'front' => 200.0      # remaining front width at the cut end
           },
 
           # worktop --------------------------------------------------------
@@ -192,21 +208,21 @@ module AHW
         specific =
           case type
           when 'base'
-            { 'rows' => [row('drawer', 'h' => 140.0), row('door')],
+            { 'rows' => [row('door'), row('drawer', 'h' => 140.0)],
               'counter' => { 'on' => true, 't' => 30.0 },
               'interior' => { 'shelves' => 1 } }
 
           when 'base_sink'
-            { 'rows' => [row('drawer', 'h' => 140.0, 'note' => 'dummy front',
-                             'drawer' => { 'box' => false }),
-                         row('doors2', 'cols' => 2)],
+            { 'rows' => [row('doors2', 'cols' => 2),
+                         row('drawer', 'h' => 140.0, 'note' => 'dummy front',
+                             'drawer' => { 'box' => false })],
               'counter' => { 'on' => true, 't' => 30.0 },
               'sink' => { 'on' => true },
               'interior' => { 'shelves' => 0,
                               'accessories' => [accessory('waste_bin', 'count' => 2)] } }
 
           when 'base_hob'
-            { 'rows' => [row('drawer', 'h' => 180.0), row('drawer', 'h' => 0.0)],
+            { 'rows' => [row('drawer', 'h' => 0.0), row('drawer', 'h' => 180.0)],
               'counter' => { 'on' => true, 't' => 30.0 },
               'hob' => { 'on' => true },
               'interior' => { 'shelves' => 0 } }
@@ -218,6 +234,24 @@ module AHW
               'interior' => { 'shelves' => 1,
                               'accessories' => [accessory('magic_corner')] } }
 
+          when 'base_chamfer'
+            { 'rows' => [row('door', 'hinge' => 'left')],
+              'counter' => { 'on' => true, 't' => 30.0 },
+              'chamfer' => { 'side' => 'right', 'depth' => 300.0, 'front' => 200.0 },
+              'interior' => { 'shelves' => 1 } }
+
+          when 'wall_corner'
+            { 'rows' => [row('door', 'hinge' => 'right')],
+              'top_mode' => 'full',
+              'corner' => { 'mode' => 'diagonal', 'return_w' => 600.0, 'return_d' => 350.0 },
+              'interior' => { 'shelves' => 1 } }
+
+          when 'wall_chamfer'
+            { 'rows' => [row('door', 'hinge' => 'left')],
+              'top_mode' => 'full',
+              'chamfer' => { 'side' => 'right', 'depth' => 200.0, 'front' => 150.0 },
+              'interior' => { 'shelves' => 1 } }
+
           when 'base_appliance'
             { 'rows' => [row('appliance', 'appl' => 'dishwasher', 'appl_integrated' => true)],
               'counter' => { 'on' => true, 't' => 30.0 },
@@ -225,8 +259,8 @@ module AHW
               'top_mode' => 'rails', 'bottom_mode' => 'none' }
 
           when 'drawer_bank'
-            { 'rows' => [row('drawer', 'h' => 180.0), row('drawer', 'h' => 180.0),
-                         row('drawer', 'h' => 180.0), row('drawer', 'h' => 0.0)],
+            { 'rows' => [row('drawer', 'h' => 0.0), row('drawer', 'h' => 180.0),
+                         row('drawer', 'h' => 180.0), row('drawer', 'h' => 180.0)],
               'counter' => { 'on' => true, 't' => 30.0 },
               'interior' => { 'shelves' => 0 } }
 
@@ -247,7 +281,7 @@ module AHW
               'top_mode' => 'full', 'back_mode' => 'none' }
 
           when 'island'
-            { 'rows' => [row('drawer', 'h' => 160.0), row('doors2', 'cols' => 2)],
+            { 'rows' => [row('doors2', 'cols' => 2), row('drawer', 'h' => 160.0)],
               'counter' => { 'on' => true, 't' => 30.0, 'back_oh' => 300.0,
                              'oh_l' => 20.0, 'oh_r' => 20.0 },
               'interior' => { 'shelves' => 1 } }
@@ -336,8 +370,8 @@ module AHW
                               'accessories' => [accessory('shoe_shelf', 'count' => 3, 'angle' => 15.0)] } }
 
           when 'island_dresser'
-            { 'rows' => [row('drawer', 'h' => 160.0), row('drawer', 'h' => 160.0),
-                         row('drawer', 'h' => 0.0)],
+            { 'rows' => [row('drawer', 'h' => 0.0), row('drawer', 'h' => 160.0),
+                         row('drawer', 'h' => 160.0)],
               'counter' => { 'on' => true, 'oh_l' => 20.0, 'oh_r' => 20.0 },
               'interior' => { 'shelves' => 0,
                               'accessories' => [accessory('jewellery_drawer')] } }
@@ -408,8 +442,19 @@ module AHW
         front['style']      = 'slab' unless Const::DOOR_STYLES.include?(front['style'])
         %w[rail panel_t panel_inset].each { |k| front['shaker'][k] = Util.num(front['shaker'][k], 10.0) }
         %w[frame_w frame_t glass_t].each { |k| front['glass'][k] = Util.num(front['glass'][k], 20.0) }
+        glass = front['glass']
+        glass['frame']   = 'aluminium' unless Const::FRAME_MATERIALS.include?(glass['frame'])
+        glass['profile'] = 'slim'      unless Const::FRAME_PROFILES.include?(glass['profile'])
+        glass['infill']  = 'glass'     unless Const::FRAME_INFILLS.include?(glass['infill'])
+        glass['div_h']   = Util.clamp(Util.int(glass['div_h'], 0), 0, 10)
+        glass['div_v']   = Util.clamp(Util.int(glass['div_v'], 0), 0, 10)
+        glass['bar_w']   = Util.clamp(Util.num(glass['bar_w'], 18.0), 4.0, 80.0)
+        glass['panel']   = 'lacquer_white' unless Materials::LIBRARY.key?(glass['panel'])
+
         handle = front['handle']
         handle['type'] = 'none' unless Const::HANDLE_TYPES.include?(handle['type'])
+        handle['mount'] = 'applied' unless Const::HANDLE_MOUNTS.include?(handle['mount'])
+        handle['side'] = 'auto' unless %w[auto left right].include?(handle['side'])
         %w[length proj dia offset].each { |k| handle[k] = Util.num(handle[k], 0.0) }
 
         params['rows'] = Array(params['rows']).map { |r| normalize_row(r) }
@@ -427,6 +472,13 @@ module AHW
           normalized['count'] = Util.clamp(Util.int(normalized['count'], 1), 1, 40)
           normalized
         end
+
+        params['insert'] = 'back_left' unless Const::INSERT_POINTS.include?(params['insert'])
+
+        chamfer = params['chamfer']
+        chamfer['side']  = 'right' unless %w[left right].include?(chamfer['side'])
+        chamfer['depth'] = Util.clamp(Util.num(chamfer['depth'], 300.0), 0.0, params['d'])
+        chamfer['front'] = Util.clamp(Util.num(chamfer['front'], 200.0), 0.0, params['w'])
 
         corner = params['corner']
         corner['mode'] = 'blind' unless %w[blind diagonal l].include?(corner['mode'])
@@ -502,6 +554,7 @@ module AHW
       def auto_name(params)
         prefix = {
           'base' => 'B', 'base_sink' => 'BS', 'base_hob' => 'BH', 'base_corner' => 'BC',
+          'base_chamfer' => 'BCH', 'wall_corner' => 'WC', 'wall_chamfer' => 'WCH',
           'base_appliance' => 'BA', 'drawer_bank' => 'BD', 'tall' => 'T',
           'wall' => 'W', 'wall_lift' => 'WL', 'wall_open' => 'WO', 'island' => 'IS',
           'hood' => 'HD', 'vanity' => 'V', 'vanity_wall' => 'VW', 'vanity_open' => 'VO',

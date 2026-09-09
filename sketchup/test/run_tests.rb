@@ -11,7 +11,11 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.1.0'
+    PLUGIN_VERSION = '1.2.0'
+    PLUGIN_COMPANY = 'AHW Architects Masr'
+    PLUGIN_AUTHOR  = 'Mahmoud Al wardany'
+    PLUGIN_AUTHOR_AR = 'محمود الوردانى'
+    PLUGIN_WEBSITE = 'https://ahwspaces.com'
     PATH_ROOT = File.expand_path('../src', __dir__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
     PATH_HTML = File.join(PATH_LIB, 'ui', 'html').freeze
@@ -403,6 +407,253 @@ check('every hinge type normalises and builds') do
     params['front']['hinge_type'] = kind
     Params.normalize(params)['front']['hinge_type'] == kind &&
       Builders::Unit.create(MODEL, params).entities.size.positive?
+  end
+end
+
+# --------------------------------------------------- v1.2 unit geometry
+check('the default base unit puts the drawer above the door') do
+  rows = Params.defaults('base')['rows']
+  rows.first['kind'] == 'door' && rows.last['kind'] == 'drawer'
+end
+
+check('every floor unit with a drawer row keeps it off the floor') do
+  %w[base base_sink island].all? do |type|
+    rows = Params.defaults(type)['rows']
+    rows.first['kind'] != 'drawer'
+  end
+end
+
+check('a chamfer unit builds an angled face') do
+  params = Params.defaults('base_chamfer')
+  layout = Layout.new(Params.normalize(params))
+  index, p1, p2 = Builders::ChamferUnit.face_edge(layout)
+  unit = Builders::Unit.create(MODEL, params)
+  !index.nil? && p1 != p2 && unit.entities.size.positive? &&
+    Builders::ChamferUnit.footprint(layout).size == 5
+end
+
+check('a chamfer with no cut falls back to a square unit') do
+  params = Params.defaults('base_chamfer')
+  params['chamfer']['depth'] = 0.0
+  normalized = Params.normalize(params)
+  layout = Layout.new(normalized)
+  Builders::ChamferUnit.footprint(layout).size == 4 &&
+    Builders::Unit.create(MODEL, normalized).entities.size.positive?
+end
+
+check('wall corner units build in all three corner modes') do
+  %w[blind diagonal l].all? do |mode|
+    params = Params.defaults('wall_corner')
+    params['corner']['mode'] = mode
+    Builders::Unit.create(MODEL, params).entities.size.positive?
+  end
+end
+
+check('every insert point shifts the unit') do
+  Const::INSERT_POINTS.all? do |point|
+    params = Params.normalize(Params.defaults('base').merge('insert' => point))
+    Builders::Unit.create(MODEL, params).transforms.size >= (point == 'back_left' ? 0 : 1)
+  end
+end
+
+# ------------------------------------------------------------- handles
+check('every aluminium profile handle builds from a section') do
+  Const::HANDLE_PROFILES.all? do |kind|
+    params = Params.defaults('base')
+    params['front']['handle']['type'] = kind
+    unit = Builders::Unit.create(MODEL, params)
+    Export::Report.parts_of(unit).any? { |row| row['part'] == 'Handle' }
+  end
+end
+
+check('every handle mount normalises and builds') do
+  Const::HANDLE_MOUNTS.all? do |mount|
+    params = Params.defaults('base')
+    params['front']['handle']['mount'] = mount
+    normalized = Params.normalize(params)
+    normalized['front']['handle']['mount'] == mount &&
+      Builders::Unit.create(MODEL, normalized).entities.size.positive?
+  end
+end
+
+check('a hidden handle moves the grip onto the carcass') do
+  params = Params.defaults('base')
+  params['front']['handle']['mount'] = 'hidden'
+  parts = Export::Report.parts_of(Builders::Unit.create(MODEL, params))
+  parts.none? { |row| row['part'] == 'Handle' } &&
+    parts.any? { |row| row['part'] == 'Gola Profile' }
+end
+
+check('a built-in handle sits inside the leaf thickness') do
+  spec = { 'mount' => 'built_in', 'proj' => 20.0, 'length' => 160.0, 'dia' => 14.0,
+           'offset' => 50.0, 'pos' => 'top', 'side' => 'auto' }
+  applied = Builders::Panel.anchor_for(spec.merge('mount' => 'applied'), 'bar',
+                                       0.0, 0.0, 0.0, 600.0, 700.0, 18.0, {})
+  builtin = Builders::Panel.anchor_for(spec, 'bar', 0.0, 0.0, 0.0, 600.0, 700.0, 18.0, {})
+  builtin[:face_y] < applied[:face_y]
+end
+
+# ------------------------------------------------------- framed doors
+check('every frame profile and infill builds') do
+  Const::FRAME_PROFILES.all? do |profile|
+    Const::FRAME_INFILLS.all? do |infill|
+      params = Params.defaults('wall')
+      params['front']['style'] = 'glass_frame'
+      params['front']['glass']['profile'] = profile
+      params['front']['glass']['infill'] = infill
+      Builders::Unit.create(MODEL, params).entities.size.positive?
+    end
+  end
+end
+
+check('glazing bars are reported as frame members') do
+  params = Params.defaults('wall')
+  params['front']['style'] = 'glass_frame'
+  params['front']['glass']['div_h'] = 2
+  params['front']['glass']['div_v'] = 1
+  parts = Export::Report.parts_of(Builders::Unit.create(MODEL, params))
+  bars = parts.find { |row| row['part'] == 'Door Frame' && row['qty'] == 3 }
+  !bars.nil?
+end
+
+check('a louvre door builds tilted overlapping blades, not boxes') do
+  params = Params.defaults('wall')
+  params['front']['style'] = 'louvre'
+  parts = Export::Report.parts_of(Builders::Unit.create(MODEL, params))
+  blade = parts.find { |row| row['part'] == 'Louvre Blade' }
+  blade && blade['qty'] > 3 && blade['thick_mm'] < blade['width_mm'] &&
+    blade['note'].to_s.include?('tilt')
+end
+
+# ------------------------------------------------------------- pricing
+check('pricing defaults carry a 30% fabrication line') do
+  data = Pricing.defaults
+  line = data['uplifts'].find { |u| u['name'].include?('Fabrication') }
+  line && line['percent'] == 30.0
+end
+
+check('pricing round trips through the model') do
+  data = Pricing.defaults
+  data['currency'] = 'AED'
+  data['rates']['ply_18_natural'] = 55.0
+  Pricing.write(MODEL, data)
+  back = Pricing.read(MODEL)
+  back['currency'] == 'AED' && Pricing.rate(back, 'ply_18_natural') == 55.0 &&
+    Pricing.overridden?(back, 'ply_18_natural')
+end
+
+check('an unset material falls back to the library rate') do
+  data = Pricing.read(MODEL)
+  Pricing.rate(data, 'quartz_white') == Materials.rate('quartz_white') &&
+    !Pricing.overridden?(data, 'quartz_white')
+end
+
+check('uplifts compound in the order they are listed') do
+  data = Pricing.defaults
+  data['uplifts'] = [{ 'name' => 'A', 'percent' => 10.0, 'on' => 'materials' },
+                     { 'name' => 'B', 'percent' => 10.0, 'on' => 'subtotal' }]
+  summary = Pricing.summarise(data, 100.0)
+  close_to(summary['lines'][0]['amount'], 10.0) &&
+    close_to(summary['lines'][1]['amount'], 11.0) &&
+    close_to(summary['total'], 121.0)
+end
+
+check('a bad rate is ignored rather than poisoning the BOQ') do
+  data = Pricing.normalize('rates' => { 'ply_18_natural' => 'abc', 'not_a_material' => 5 })
+  data['rates'].empty?
+end
+
+check('the BOQ prices at the project rate and shows the uplifts') do
+  Pricing.write(MODEL, Pricing.defaults.merge('currency' => 'EGP'))
+  data = Export::Report.boq(MODEL, false)
+  data['subtotal'].positive? && data['total'] > data['subtotal'] &&
+    data['uplifts'].any? { |row| row['name'].include?('Fabrication') } &&
+    data['currency'] == 'EGP'
+end
+
+check('BOQ CSV carries the credit and the currency') do
+  csv = Export::Report.boq_csv(Export::Report.boq(MODEL, false))
+  csv.include?(PLUGIN_AUTHOR) && csv.include?(PLUGIN_WEBSITE) && csv.include?('Currency')
+end
+
+# ------------------------------------------------------------- nesting
+check('nesting reports sheets and waste per material') do
+  rows = Export::Report.cutlist(MODEL, false)
+  results = Export::Nesting.plan(rows)
+  results.any? && results.all? do |row|
+    row['sheets'].positive? && row['waste_pct'] >= 0 && row['waste_pct'] <= 100
+  end
+end
+
+check('nesting never claims fewer sheets than the area needs') do
+  rows = Export::Report.cutlist(MODEL, false)
+  Export::Nesting.plan(rows).all? do |row|
+    row['sheet_m2'] >= row['used_m2'] - 0.001
+  end
+end
+
+check('an oversize panel is reported, not silently packed') do
+  rows = [{ 'material' => 'ply_18_natural', 'thick_mm' => 18.0, 'length_mm' => 4000.0,
+            'width_mm' => 2000.0, 'qty' => 1, 'grain' => 'height',
+            'part' => 'Gable', 'unit' => 'X' }]
+  Export::Nesting.plan(rows).first['oversize'] == 1
+end
+
+check('nesting CSV lists a total') do
+  Export::Nesting.csv(Export::Nesting.plan(Export::Report.cutlist(MODEL, false)))
+                 .include?('Total sheets')
+end
+
+# ----------------------------------------------------------- job order
+check('the job order lists panels and hardware per unit') do
+  orders = Export::Report.job_order(MODEL, false)
+  orders.any? && orders.all? { |o| o['unit'] && o['size'] } &&
+    orders.any? { |o| o['panels'].any? } && orders.any? { |o| o['hardware'].any? }
+end
+
+check('job order CSV carries the company details') do
+  csv = Export::Report.job_order_csv(Export::Report.job_order(MODEL, false))
+  csv.include?(PLUGIN_COMPANY) && csv.include?('Part,Material')
+end
+
+# ------------------------------------------------------- dressing room
+check('every dressing layout builds its runs') do
+  Const::DRESSING_LAYOUTS.all? do |layout|
+    _room, units = Builders::DressingRoom.build(MODEL, 'layout' => layout)
+    units.size.positive?
+  end
+end
+
+check('an L room has more modules than a single wall') do
+  _r1, single = Builders::DressingRoom.build(MODEL, 'layout' => 'single')
+  _r2, l_shape = Builders::DressingRoom.build(MODEL, 'layout' => 'l_shape')
+  l_shape.size > single.size
+end
+
+check('a walk-in adds the island on top of the U') do
+  _r1, without = Builders::DressingRoom.build(MODEL, 'layout' => 'u_shape')
+  _r2, with = Builders::DressingRoom.build(MODEL, 'layout' => 'walk_in', 'island' => true)
+  with.size == without.size + 1
+end
+
+check('modules never exceed the sensible carcass width') do
+  Builders::DressingRoom.divide(5200.0, 1000.0).all? { |w| w <= 1200.0 } &&
+    close_to(Builders::DressingRoom.divide(5200.0, 1000.0).sum, 5200.0, 0.1)
+end
+
+check('the balanced template mixes hanging, shelving and drawers') do
+  kinds = (0..3).map { |i| Builders::DressingRoom.module_kind('balanced', i) }
+  kinds.uniq.sort == %w[drawers hanging shelving]
+end
+
+check('every dressing template and door type builds') do
+  %w[balanced hanging shelving drawers].all? do |template|
+    %w[hinged sliding open].all? do |doors|
+      _room, units = Builders::DressingRoom.build(
+        MODEL, 'layout' => 'single', 'template' => template, 'doors' => doors
+      )
+      units.size.positive?
+    end
   end
 end
 

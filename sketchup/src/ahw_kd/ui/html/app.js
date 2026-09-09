@@ -14,10 +14,14 @@ var AHWKD = (function () {
     auto: true,
     tab: 'unit',
     boq: null,
+    nesting: null,
+    pricing: null,
+    dressing: null,
     timer: null
   };
 
-  var TABS = ['unit', 'carcass', 'fronts', 'interior', 'top', 'materials', 'presets', 'reports'];
+  var TABS = ['unit', 'layout', 'carcass', 'fronts', 'interior', 'top',
+              'materials', 'pricing', 'room', 'presets', 'reports'];
 
   /* ------------------------------------------------------------ i18n */
   var DICT = {
@@ -115,7 +119,49 @@ var AHWKD = (function () {
     side_mode: ['End panels', 'الجنب / الباكية'],
     scribe: ['Scribe past front mm', 'زيادة الجنب للحائط مم'],
     hinge_type: ['Hinge type', 'نوع المفصلة'],
-    radius: ['Corner radius mm', 'نصف قطر الركن مم']
+    radius: ['Corner radius mm', 'نصف قطر الركن مم'],
+    layout: ['Layout', 'تقسيم الواجهة'],
+    layout_hint: ['The front is a stack of rows, bottom to top. A row with height 0 takes whatever is left. Use × to delete a row and ▲▼ to reorder.',
+                  'الواجهة عبارة عن صفوف من أسفل لأعلى. الصف بارتفاع 0 يأخذ الباقي تلقائياً. استخدم × لحذف الصف و ▲▼ لإعادة الترتيب.'],
+    base: ['Base', 'القاعدة'], insert: ['Insert point', 'نقطة الإدراج'],
+    insert_hint: ['Which corner of the unit lands on the point you click. Back left keeps a run stepping along the wall.',
+                  'أي ركن من الوحدة ينزل على النقطة اللي تضغط عليها. الركن الخلفي الأيسر يخلي الوحدات تترص على الحائط بسهولة.'],
+    handle_mount: ['Mounting', 'طريقة التركيب'], handle_side: ['Side', 'الجهة'],
+    frame_material: ['Frame', 'البرواز'], frame_profile: ['Frame profile', 'شكل البرواز'],
+    frame_infill: ['Infill', 'الحشو'], div_h: ['Horizontal bars', 'تقاسيم أفقية'],
+    div_v: ['Vertical bars', 'تقاسيم رأسية'], bar_w: ['Bar width mm', 'عرض التقسيمة مم'],
+    infill_panel: ['Infill panel material', 'خامة الحشوة'],
+    chamfer: ['Chamfer', 'الشانفر'], chamfer_side: ['Cut side', 'جهة القطع'],
+    chamfer_depth: ['Cut depth mm', 'عمق القطع مم'],
+    chamfer_front: ['Front cut mm', 'القطع من الواجهة مم'],
+    pricing: ['Pricing', 'التسعير'],
+    pricing_hint: ['Rates change every project and every supplier, so they live with this model, not in the plugin. Edit any rate, then add the uplifts on top.',
+                   'الأسعار بتتغير كل مشروع وكل مورد، فهي محفوظة مع الموديل نفسه مش جوه البلاجن. عدّل أي سعر، وضيف البنود فوقه.'],
+    currency: ['Currency', 'العملة'], rate_lib: ['Library', 'المكتبة'],
+    rate_project: ['Project rate', 'سعر المشروع'],
+    uplifts: ['Uplifts on top', 'بنود فوق ثمن الخامات'],
+    uplift_name: ['Description', 'البند'], uplift_pct: ['%', '%'],
+    uplift_on: ['Applied on', 'يُحسب على'], add_uplift: ['Add line', 'إضافة بند'],
+    save_pricing: ['Save to model', 'حفظ في الموديل'],
+    reset_pricing: ['Reset', 'إرجاع الافتراضي'],
+    sheet_size: ['Sheet size mm', 'مقاس اللوح مم'],
+    subtotal: ['Materials subtotal', 'إجمالي الخامات'],
+    room: ['Dressing room', 'غرفة الملابس'],
+    room_hint: ['Give it the room and it lays a run of modules along each wall, divided into hanging, shelving and drawers.',
+                'اديله مقاسات الغرفة وهو يوزع الوحدات على كل حائط، مقسّمة بين علاقات وأرفف وأدراج.'],
+    room_layout: ['Configuration', 'الشكل'], wall_a: ['Wall A length mm', 'طول الحائط A مم'],
+    wall_b: ['Wall B length mm', 'طول الحائط B مم'], wall_c: ['Wall C length mm', 'طول الحائط C مم'],
+    room_h: ['Height mm', 'الارتفاع مم'], room_d: ['Depth mm', 'العمق مم'],
+    module_w: ['Module width mm', 'عرض الوحدة مم'], template: ['Division mix', 'نمط التقسيم'],
+    room_doors: ['Doors', 'الضلف'], room_island: ['Add island', 'إضافة جزيرة'],
+    island_w: ['Island width mm', 'عرض الجزيرة مم'], island_d: ['Island depth mm', 'عمق الجزيرة مم'],
+    build_room: ['Build dressing room', 'تنفيذ غرفة الملابس'],
+    nesting: ['Sheet nesting CSV', 'تحسين الألواح CSV'],
+    nesting_view: ['Preview nesting', 'عرض تحسين الألواح'],
+    job_order: ['Workshop job order', 'أمر تشغيل الورشة'],
+    sheets: ['Sheets', 'عدد الألواح'], waste: ['Waste %', 'الهالك %'],
+    pieces: ['Pieces', 'القطع'], thickness: ['Thickness', 'السماكة'],
+    developed: ['Developed by', 'تطوير']
   };
 
   function t(key) {
@@ -146,8 +192,19 @@ var AHWKD = (function () {
   }
 
   /* ------------------------------------------------------ path access */
-  function get(path) {
-    var parts = path.split('.'), node = S.params, i;
+  /* The dialog edits three separate objects: the unit params, the project
+     pricing and the dressing-room spec. STORE says which one the controls
+     being rendered right now belong to. */
+  var STORE = 'params';
+
+  function store(name) {
+    if (name === 'pricing') { return S.pricing; }
+    if (name === 'dressing') { return S.dressing; }
+    return S.params;
+  }
+
+  function get(path, which) {
+    var parts = path.split('.'), node = store(which || STORE), i;
     for (i = 0; i < parts.length; i++) {
       if (node === null || node === undefined) { return undefined; }
       node = node[isNaN(parts[i]) ? parts[i] : Number(parts[i])];
@@ -155,8 +212,8 @@ var AHWKD = (function () {
     return node;
   }
 
-  function set(path, value) {
-    var parts = path.split('.'), node = S.params, i, key;
+  function set(path, value, which) {
+    var parts = path.split('.'), node = store(which || STORE), i, key;
     for (i = 0; i < parts.length - 1; i++) {
       key = isNaN(parts[i]) ? parts[i] : Number(parts[i]);
       if (node[key] === undefined || node[key] === null) { node[key] = {}; }
@@ -172,16 +229,21 @@ var AHWKD = (function () {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function storeAttr() {
+    return STORE === 'params' ? '' : ' data-store="' + STORE + '"';
+  }
+
   function num(path, label, step, extra) {
     var value = get(path);
     return '<div class="field"><label>' + esc(label) + '</label>' +
       '<input type="number" step="' + (step || 1) + '" data-path="' + path + '" data-cast="num"' +
-      (extra || '') + ' value="' + esc(value) + '"></div>';
+      storeAttr() + (extra || '') + ' value="' + esc(value) + '"></div>';
   }
 
   function txt(path, label) {
     return '<div class="field"><label>' + esc(label) + '</label>' +
-      '<input type="text" data-path="' + path + '" data-cast="str" value="' + esc(get(path)) + '"></div>';
+      '<input type="text" data-path="' + path + '" data-cast="str"' + storeAttr() +
+      ' value="' + esc(get(path)) + '"></div>';
   }
 
   function sel(path, label, options, rerender) {
@@ -192,13 +254,13 @@ var AHWKD = (function () {
         '>' + esc(opt[1]) + '</option>';
     }
     return '<div class="field"><label>' + esc(label) + '</label>' +
-      '<select data-path="' + path + '" data-cast="str"' + (rerender ? ' data-rerender="1"' : '') +
-      '>' + html + '</select></div>';
+      '<select data-path="' + path + '" data-cast="str"' + storeAttr() +
+      (rerender ? ' data-rerender="1"' : '') + '>' + html + '</select></div>';
   }
 
   function chk(path, label, rerender) {
     return '<div class="inline"><input type="checkbox" data-path="' + path + '" data-cast="bool"' +
-      (get(path) ? ' checked' : '') + (rerender ? ' data-rerender="1"' : '') +
+      storeAttr() + (get(path) ? ' checked' : '') + (rerender ? ' data-rerender="1"' : '') +
       '><label>' + esc(label) + '</label></div>';
   }
 
@@ -291,6 +353,7 @@ var AHWKD = (function () {
   }
 
   function renderPreview() {
+    STORE = 'params';
     var node = document.getElementById('preview');
     if (!S.params) { node.innerHTML = ''; return; }
 
@@ -419,11 +482,14 @@ var AHWKD = (function () {
     renderTabs();
     renderPreview();
     renderUnit();
+    renderLayout();
     renderCarcass();
     renderFronts();
     renderInterior();
     renderTop();
     renderMaterials();
+    renderPricing();
+    renderRoom();
     renderPresets();
     renderReports();
     document.getElementById('btn-place').textContent = t('place');
@@ -436,6 +502,7 @@ var AHWKD = (function () {
 
   /* ------------------------------------------------------------ unit */
   function renderUnit() {
+    STORE = 'params';
     var families = S.lists.families || {};
     var family = S.params.family;
     var types = families[family] || [];
@@ -467,6 +534,21 @@ var AHWKD = (function () {
           esc(S.lang === 'ar' ? st.ar : st.en) + '</button>';
       }).join('') + '</div>');
 
+    html += fieldset(t('base'),
+      grid(sel('plinth.mode', t('plinth_mode'),
+             pairs(['panel', 'legs', 'floating', 'wall_hung', 'none']), true) +
+           num('plinth.h', t('plinth_h'), 5)) +
+      (S.params.plinth.mode === 'none' ? '' :
+        grid(num('plinth.setback', t('plinth_setback'), 5) +
+             num('plinth.shadow', t('plinth_shadow'), 1)) +
+        grid(num('plinth.leg_dia', t('leg_dia'), 1) + '') +
+        chk('plinth.returns', t('plinth_returns')) +
+        chk('plinth.led', t('plinth_led'))));
+
+    html += fieldset(t('insert'),
+      '<p class="hint">' + t('insert_hint') + '</p>' +
+      sel('insert', t('insert'), pairs(S.lists.inserts || [])));
+
     if (S.params.type === 'hood') {
       html += fieldset(t('hood_style'),
         sel('hood_style', t('hood_style'),
@@ -485,6 +567,7 @@ var AHWKD = (function () {
 
   /* --------------------------------------------------------- carcass */
   function renderCarcass() {
+    STORE = 'params';
     var html = '';
     html += fieldset(t('carcass'),
       grid(num('panel_t', t('panel_t'), 0.5) + num('front_t', t('front_t'), 0.5) +
@@ -498,16 +581,15 @@ var AHWKD = (function () {
       (S.params.side_mode === 'scribe' ? num('scribe', t('scribe'), 5) : '')
     );
 
-    html += fieldset(t('plinth_mode'),
-      grid(sel('plinth.mode', t('plinth_mode'), pairs(['panel', 'legs', 'floating', 'wall_hung', 'none']), true) +
-           num('plinth.h', t('plinth_h'), 5)) +
-      grid(num('plinth.setback', t('plinth_setback'), 5) + num('plinth.leg_dia', t('leg_dia'), 1)) +
-      grid(num('plinth.shadow', t('plinth_shadow'), 1) + '') +
-      chk('plinth.returns', t('plinth_returns')) +
-      chk('plinth.led', t('plinth_led'))
-    );
+    if (S.params.type === 'base_chamfer' || S.params.type === 'wall_chamfer') {
+      html += fieldset(t('chamfer'),
+        grid(sel('chamfer.side', t('chamfer_side'), pairs(['left', 'right'])) +
+             num('chamfer.depth', t('chamfer_depth'), 10)) +
+        num('chamfer.front', t('chamfer_front'), 10));
+    }
 
-    if (S.params.type === 'base_corner' || S.params.type === 'corner_wardrobe') {
+    if (S.params.type === 'base_corner' || S.params.type === 'wall_corner' ||
+        S.params.type === 'corner_wardrobe') {
       html += fieldset(t('corner'),
         grid(sel('corner.mode', t('corner_mode'), pairs(['blind', 'diagonal', 'l']), true) +
              sel('corner.side', t('corner_side'), pairs(['left', 'right']))) +
@@ -522,6 +604,7 @@ var AHWKD = (function () {
 
   /* ---------------------------------------------------------- fronts */
   function renderFronts() {
+    STORE = 'params';
     var html = '';
     html += fieldset(t('fronts'),
       grid(sel('front.mode', t('front_mode'), pairs(['overlay_full', 'overlay_half', 'inset'])) +
@@ -546,18 +629,32 @@ var AHWKD = (function () {
              num('front.ribbed.depth', t('rib_depth'), 0.5)));
     }
     if (style === 'glass_frame' || style === 'glass_full') {
-      html += fieldset(t('glass_type'),
-        grid(sel('front.glass.type', t('glass_type'), (S.lists.glass || []).map(function (g) {
-          return [g.key, g.label];
-        })) + sel('front.glass.frame', t('glass_frame'), pairs(['aluminium', 'timber', 'none']))) +
+      html += fieldset(t('frame_material'),
+        grid(sel('front.glass.frame', t('frame_material'),
+               pairs(S.lists.frame_materials || []), true) +
+             sel('front.glass.profile', t('frame_profile'),
+               pairs(S.lists.frame_profiles || []))) +
+        grid(sel('front.glass.infill', t('frame_infill'),
+               pairs(S.lists.frame_infills || []), true) +
+             sel('front.glass.type', t('glass_type'), (S.lists.glass || []).map(function (g) {
+               return [g.key, g.label];
+             }))) +
+        (S.params.front.glass.infill === 'panel'
+          ? sel('front.glass.panel', t('infill_panel'), materialOptions()) : '') +
         grid(num('front.glass.frame_w', t('frame_w'), 1) +
              num('front.glass.frame_t', t('frame_t'), 1) +
-             num('front.glass.glass_t', t('glass_t'), 0.5), 3));
+             num('front.glass.glass_t', t('glass_t'), 0.5), 3) +
+        grid(num('front.glass.div_h', t('div_h'), 1) +
+             num('front.glass.div_v', t('div_v'), 1) +
+             num('front.glass.bar_w', t('bar_w'), 1), 3));
     }
 
     html += fieldset(t('handle'),
       grid(sel('front.handle.type', t('handle_shape'), pairs(S.lists.handles || []), true) +
-           sel('front.handle.pos', t('handle_pos'), pairs(['top', 'bottom', 'left', 'right', 'centre']))) +
+           sel('front.handle.mount', t('handle_mount'), pairs(S.lists.mounts || []), true)) +
+      grid(sel('front.handle.pos', t('handle_pos'),
+             pairs(['top', 'bottom', 'left', 'right', 'centre'])) +
+           sel('front.handle.side', t('handle_side'), pairs(['auto', 'left', 'right']))) +
       sel('front.handle.material', t('handle_finish'),
         (S.lists.finishes || []).map(function (f) { return [f.key, f.label]; })) +
       grid(num('front.handle.length', t('handle_len'), 5) +
@@ -566,10 +663,16 @@ var AHWKD = (function () {
            num('front.handle.offset', t('handle_offset'), 5))
     );
 
-    html += fieldset(t('rows'), rowsEditor() +
-      '<button class="btn wide" data-act="add-row">+ ' + t('add_row') + '</button>');
-
     document.getElementById('tab-fronts').innerHTML = html;
+  }
+
+  function renderLayout() {
+    STORE = 'params';
+    var html = fieldset(t('rows'),
+      '<p class="hint">' + t('layout_hint') + '</p>' +
+      rowsEditor() +
+      '<button class="btn wide primary" data-act="add-row">+ ' + t('add_row') + '</button>');
+    document.getElementById('tab-layout').innerHTML = html;
   }
 
   function rowsEditor() {
@@ -640,6 +743,7 @@ var AHWKD = (function () {
 
   /* -------------------------------------------------------- interior */
   function renderInterior() {
+    STORE = 'params';
     var html = fieldset(t('interior'),
       grid(num('interior.shelves', t('shelves'), 1) +
            sel('interior.shelf_mode', t('shelf_mode'), pairs(['adjustable', 'fixed']))) +
@@ -671,6 +775,7 @@ var AHWKD = (function () {
 
   /* ------------------------------------------------------------- top */
   function renderTop() {
+    STORE = 'params';
     var html = fieldset(t('counter_on'),
       chk('counter.on', t('counter_on'), true));
 
@@ -715,6 +820,7 @@ var AHWKD = (function () {
 
   /* ------------------------------------------------------- materials */
   function renderMaterials() {
+    STORE = 'params';
     var options = materialOptions();
     var html = fieldset(t('materials'),
       sel('materials.carcass', t('m_carcass'), options) +
@@ -739,8 +845,108 @@ var AHWKD = (function () {
     document.getElementById('tab-materials').innerHTML = html;
   }
 
+  /* --------------------------------------------------------- pricing */
+  function pricedMaterials() {
+    if (S.boq && S.boq.materials && S.boq.materials.length) {
+      return S.boq.materials.map(function (row) {
+        return { key: row.key, name: row.material, area: row.area_m2 };
+      });
+    }
+    return (S.lists.materials || [])
+      .filter(function (m) { return m.cat !== 'metal' && m.cat !== 'light'; })
+      .map(function (m) { return { key: m.key, name: m.name, area: null }; });
+  }
+
+  function renderPricing() {
+    STORE = 'pricing';
+    if (!S.pricing) { document.getElementById('tab-pricing').innerHTML = ''; return; }
+
+    var html = fieldset(t('pricing'),
+      '<p class="hint">' + t('pricing_hint') + '</p>' +
+      grid(txt('currency', t('currency')) + '') +
+      grid(num('sheet.w', t('sheet_size') + ' W', 10) + num('sheet.h', t('sheet_size') + ' H', 10)));
+
+    var rows = pricedMaterials().map(function (m) {
+      var override = S.pricing.rates[m.key];
+      var lib = 0;
+      (S.lists.materials || []).forEach(function (x) { if (x.key === m.key) { lib = x.rate; } });
+      return '<tr><td>' + esc(m.name) +
+        (m.area === null ? '' : ' <small>' + m.area + ' m²</small>') +
+        '</td><td class="num"><small>' + lib + '</small></td>' +
+        '<td class="num"><input type="number" step="1" class="rate" data-store="pricing" ' +
+        'data-cast="num" data-path="rates.' + m.key + '" value="' +
+        esc(override === undefined ? lib : override) + '"></td></tr>';
+    }).join('');
+
+    html += fieldset(t('material') + ' / ' + t('rate'),
+      '<table><thead><tr><th>' + t('material') + '</th><th class="num">' + t('rate_lib') +
+      '</th><th class="num">' + t('rate_project') + '</th></tr></thead><tbody>' +
+      rows + '</tbody></table>');
+
+    var uplifts = (S.pricing.uplifts || []).map(function (u, i) {
+      return '<div class="row-card"><div class="row-head">' +
+        '<span class="idx">' + (i + 1) + '</span>' +
+        '<input type="text" data-store="pricing" data-cast="str" data-path="uplifts.' + i +
+        '.name" value="' + esc(u.name) + '">' +
+        '<button class="icon-btn" data-act="uplift-del" data-i="' + i + '">&#10005;</button></div>' +
+        grid(num('uplifts.' + i + '.percent', t('uplift_pct'), 0.5) +
+             sel('uplifts.' + i + '.on', t('uplift_on'),
+               [['materials', t('subtotal')], ['subtotal', t('total')]])) +
+        '</div>';
+    }).join('');
+
+    html += fieldset(t('uplifts'), uplifts +
+      '<button class="btn wide" data-act="uplift-add">+ ' + t('add_uplift') + '</button>');
+
+    html += '<div class="btn-row">' +
+      '<button class="btn primary" data-act="pricing-save">' + t('save_pricing') + '</button>' +
+      '<button class="btn" data-act="pricing-reset">' + t('reset_pricing') + '</button></div>';
+
+    document.getElementById('tab-pricing').innerHTML = html;
+    STORE = 'params';
+  }
+
+  /* ----------------------------------------------------- dressing room */
+  function renderRoom() {
+    STORE = 'dressing';
+    if (!S.dressing) { document.getElementById('tab-room').innerHTML = ''; return; }
+
+    var layout = S.dressing.layout;
+    var html = fieldset(t('room'),
+      '<p class="hint">' + t('room_hint') + '</p>' +
+      sel('layout', t('room_layout'), pairs(S.lists.dressing_layouts || []), true) +
+      txt('name', t('room')));
+
+    html += fieldset(t('w') + ' / ' + t('h') + ' / ' + t('d'),
+      grid(num('wall_a', t('wall_a'), 50) +
+           (layout === 'single' ? '' : num('wall_b', t('wall_b'), 50))) +
+      ((layout === 'u_shape' || layout === 'walk_in')
+        ? grid(num('wall_c', t('wall_c'), 50) + '') : '') +
+      grid(num('h', t('room_h'), 10) + num('d', t('room_d'), 10)) +
+      grid(num('module_w', t('module_w'), 25) + num('plinth_h', t('plinth_h'), 5)));
+
+    html += fieldset(t('layout'),
+      grid(sel('template', t('template'),
+             pairs(['balanced', 'hanging', 'shelving', 'drawers'])) +
+           sel('doors', t('room_doors'), pairs(['hinged', 'sliding', 'open']))) +
+      sel('style', t('design_style'), (S.lists.styles_design || []).map(function (st) {
+        return [st.key, S.lang === 'ar' ? st.ar : st.en];
+      })));
+
+    if (layout === 'walk_in') {
+      html += fieldset(t('room_island'), chk('island', t('room_island'), true) +
+        (S.dressing.island
+          ? grid(num('island_w', t('island_w'), 50) + num('island_d', t('island_d'), 50)) : ''));
+    }
+
+    html += '<button class="btn wide primary" data-act="room-build">' + t('build_room') + '</button>';
+    document.getElementById('tab-room').innerHTML = html;
+    STORE = 'params';
+  }
+
   /* --------------------------------------------------------- presets */
   function renderPresets() {
+    STORE = 'params';
     var presets = S.lists.presets || [];
     var html = fieldset(t('presets'),
       '<div class="field"><label>' + t('preset_name') +
@@ -777,23 +983,47 @@ var AHWKD = (function () {
 
   /* --------------------------------------------------------- reports */
   function renderReports() {
+    STORE = 'params';
     var html = fieldset(t('reports'),
       '<p class="hint">' + t('reports_hint') + '</p>' +
       '<div class="btn-row"><button class="btn" data-act="report" data-kind="cutlist">' + t('cutlist') +
       '</button><button class="btn" data-act="report" data-kind="hardware">' + t('hardware') + '</button></div>' +
+      '<div class="btn-row"><button class="btn" data-act="report" data-kind="nesting">' + t('nesting') +
+      '</button><button class="btn" data-act="report" data-kind="nesting_view">' + t('nesting_view') + '</button></div>' +
       '<div class="btn-row"><button class="btn" data-act="report" data-kind="boq">' + t('boq') +
-      '</button><button class="btn" data-act="report" data-kind="boq_view">' + t('boq_view') + '</button></div>'
+      '</button><button class="btn" data-act="report" data-kind="boq_view">' + t('boq_view') + '</button></div>' +
+      '<div class="btn-row"><button class="btn" data-act="report" data-kind="job_order">' +
+      t('job_order') + '</button></div>'
     );
 
+    if (S.nesting && S.nesting.length) {
+      html += fieldset(t('nesting'),
+        '<table><thead><tr><th>' + t('material') + '</th><th class="num">' + t('thickness') +
+        '</th><th class="num">' + t('pieces') + '</th><th class="num">' + t('sheets') +
+        '</th><th class="num">' + t('waste') + '</th></tr></thead><tbody>' +
+        S.nesting.map(function (row) {
+          return '<tr><td>' + esc(row.label) + '</td><td class="num">' + row.thickness +
+            '</td><td class="num">' + row.pieces + '</td><td class="num">' + row.sheets +
+            '</td><td class="num">' + row.waste_pct + '</td></tr>';
+        }).join('') + '</tbody></table>');
+    }
+
     if (S.boq) {
-      html += fieldset('BOQ ' + esc(S.boq.generated),
+      var rows = S.boq.materials.map(function (row) {
+        return '<tr><td>' + esc(row.material) + (row.custom ? ' <small>*</small>' : '') +
+          '</td><td class="num">' + row.area_m2 + '</td><td class="num">' + row.rate +
+          '</td><td class="num">' + row.amount + '</td></tr>';
+      }).join('');
+      rows += '<tr><td colspan="3">' + t('subtotal') + '</td><td class="num">' +
+        S.boq.subtotal + '</td></tr>';
+      (S.boq.uplifts || []).forEach(function (row) {
+        rows += '<tr><td colspan="3">' + esc(row.name) + ' <small>' + row.percent +
+          '%</small></td><td class="num">' + row.amount + '</td></tr>';
+      });
+      html += fieldset('BOQ ' + esc(S.boq.generated) + ' · ' + esc(S.boq.currency),
         '<table><thead><tr><th>' + t('material') + '</th><th class="num">' + t('area') +
         '</th><th class="num">' + t('rate') + '</th><th class="num">' + t('amount') +
-        '</th></tr></thead><tbody>' +
-        S.boq.materials.map(function (row) {
-          return '<tr><td>' + esc(row.material) + '</td><td class="num">' + row.area_m2 +
-            '</td><td class="num">' + row.rate + '</td><td class="num">' + row.amount + '</td></tr>';
-        }).join('') +
+        '</th></tr></thead><tbody>' + rows +
         '</tbody><tfoot><tr><td colspan="3">' + t('total') + '</td><td class="num">' +
         S.boq.total + '</td></tr></tfoot></table>');
     }
@@ -828,12 +1058,18 @@ var AHWKD = (function () {
     var node = event.target;
     var path = node.getAttribute('data-path');
     if (!path) { return; }
+    var which = node.getAttribute('data-store') || 'params';
     var cast = node.getAttribute('data-cast');
     var value;
     if (cast === 'num') { value = parseFloat(node.value); if (isNaN(value)) { value = 0; } }
     else if (cast === 'bool') { value = node.checked; }
     else { value = node.value; }
-    set(path, value);
+    set(path, value, which);
+
+    if (which !== 'params') {
+      if (node.getAttribute('data-rerender')) { render(); }
+      return;
+    }
 
     if (node.getAttribute('data-live')) {
       var label = document.getElementById('rv-' + path.replace(/\./g, '-'));
@@ -896,6 +1132,23 @@ var AHWKD = (function () {
           style: node.getAttribute('data-style'), params: S.params
         }));
         break;
+      case 'uplift-add':
+        S.pricing.uplifts.push({ name: 'New line', percent: 0, on: 'materials' });
+        renderPricing();
+        break;
+      case 'uplift-del':
+        S.pricing.uplifts.splice(index, 1);
+        renderPricing();
+        break;
+      case 'pricing-save':
+        call('pricing_save', JSON.stringify(S.pricing));
+        break;
+      case 'pricing-reset':
+        call('pricing_reset');
+        break;
+      case 'room-build':
+        call('dressing_build', JSON.stringify(S.dressing));
+        break;
       case 'preset-save':
         call('preset_save', JSON.stringify({
           name: document.getElementById('preset-name').value, params: S.params
@@ -908,8 +1161,10 @@ var AHWKD = (function () {
       case 'block-pick':   call('pick_block', node.getAttribute('data-key')); break;
       case 'block-clear':  call('clear_block', node.getAttribute('data-key')); break;
       case 'report':
-        S.boq = null;
-        call('report', node.getAttribute('data-kind'));
+        var kind = node.getAttribute('data-kind');
+        if (kind.indexOf('boq') === 0) { S.boq = null; }
+        if (kind.indexOf('nesting') === 0) { S.nesting = null; }
+        call('report', kind);
         break;
     }
   }
@@ -921,6 +1176,17 @@ var AHWKD = (function () {
       S.materialOptions = null;
       S.params = data.params;
       document.getElementById('version').textContent = 'v' + data.version;
+      var brand = data.brand || {};
+      var credit = document.getElementById('credit');
+      if (credit) {
+        credit.innerHTML = esc(brand.company || '') + ' · ' +
+          '<a href="' + esc(brand.website || '#') + '" target="_blank">' +
+          esc((brand.website || '').replace(/^https?:\/\//, '')) + '</a> · ' +
+          t('developed') + ': ' + esc(S.lang === 'ar' ? (brand.author_ar || brand.author)
+                                                      : (brand.author || ''));
+      }
+      S.pricing = data.pricing;
+      S.dressing = data.dressing;
       render();
     },
     params: function (params) {
@@ -935,10 +1201,13 @@ var AHWKD = (function () {
     },
     presets: function (list) { S.lists.presets = list; renderPresets(); },
     blocks: function (map) { S.lists.blocks = map; renderPresets(); },
-    boq: function (data) { S.boq = data; renderReports(); },
+    boq: function (data) { S.boq = data; renderReports(); renderPricing(); },
+    nesting: function (data) { S.nesting = data; renderReports(); },
+    pricing: function (data) { S.pricing = data; renderPricing(); },
     status: function (data) {
       status(data.message, data.ok ? 'ok' : 'err');
     },
+    open_tab: function (id) { if (TABS.indexOf(id) >= 0) { S.tab = id; renderTabs(); } },
     lang: function (code) { S.lang = code; render(); }
   };
 

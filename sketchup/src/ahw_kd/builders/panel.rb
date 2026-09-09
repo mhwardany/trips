@@ -106,41 +106,136 @@ module AHW
           end
         end
 
+        # A framed door: aluminium or timber surround with a chosen profile,
+        # any infill, and optional glazing bars. This is the aluminium door
+        # everyone actually specifies, not a rectangle with a pane in it.
         def glass_frame(ents, model, layout, x, y, z, w, h, t, material)
           spec = layout.params['front']['glass']
           frame_w = Util.clamp(spec['frame_w'].to_f, 10.0, [w, h].min / 2.0 - 5.0)
           frame_t = Util.clamp(spec['frame_t'].to_f, 8.0, 60.0)
-          glass_t = Util.clamp(spec['glass_t'].to_f, 3.0, 12.0)
           frame_material = spec['frame'] == 'timber' ? material : 'alu_anodised'
 
-          if spec['frame'] != 'none'
-            Geom3.part(ents, model, name: 'Frame L', part: 'Door Frame', material: frame_material,
-                                    x: x, y: y, z: z, w: frame_w, d: frame_t, h: h,
-                                    length: h, width: frame_w, thick: frame_t)
-            Geom3.part(ents, model, name: 'Frame R', part: 'Door Frame', material: frame_material,
-                                    x: x + w - frame_w, y: y, z: z, w: frame_w, d: frame_t, h: h,
-                                    length: h, width: frame_w, thick: frame_t)
-            middle = w - 2 * frame_w
-            if middle > 1.0
-              Geom3.part(ents, model, name: 'Frame B', part: 'Door Frame', material: frame_material,
-                                      x: x + frame_w, y: y, z: z, w: middle, d: frame_t, h: frame_w,
-                                      length: middle, width: frame_w, thick: frame_t)
-              Geom3.part(ents, model, name: 'Frame T', part: 'Door Frame', material: frame_material,
-                                      x: x + frame_w, y: y, z: z + h - frame_w,
-                                      w: middle, d: frame_t, h: frame_w,
-                                      length: middle, width: frame_w, thick: frame_t)
-            end
+          if spec['frame'] == 'none'
+            infill(ents, model, layout, spec, x, y, z, w, h, frame_t, material)
+            return
           end
 
-          inset = spec['frame'] == 'none' ? 0.0 : frame_w - 6.0
-          glass_w = w - 2 * inset
-          glass_h = h - 2 * inset
-          return if glass_w <= 1.0 || glass_h <= 1.0
+          profile = spec['profile']
+          [['Frame L', x,                z,                frame_w, h,       :v],
+           ['Frame R', x + w - frame_w,  z,                frame_w, h,       :v],
+           ['Frame B', x + frame_w,      z,                w - 2 * frame_w, frame_w, :h],
+           ['Frame T', x + frame_w,      z + h - frame_w,  w - 2 * frame_w, frame_w, :h]]
+            .each do |(name, fx, fz, fw, fh, axis)|
+            next if fw <= 0.5 || fh <= 0.5
 
-          Geom3.part(ents, model, name: 'Glass', part: 'Glass', material: glass_material(layout),
-                                  x: x + inset, y: y + (frame_t - glass_t) / 2.0, z: z + inset,
-                                  w: glass_w, d: glass_t, h: glass_h,
-                                  length: glass_h, width: glass_w, thick: glass_t)
+            frame_member(ents, model, name, frame_material, profile,
+                         fx, y, fz, fw, fh, frame_t, axis)
+          end
+
+          inset = frame_w - 6.0
+          infill(ents, model, layout, spec, x + inset, y, z + inset,
+                 w - 2 * inset, h - 2 * inset, frame_t, material)
+          glazing_bars(ents, model, spec, frame_material,
+                       x + inset, y, z + inset, w - 2 * inset, h - 2 * inset, frame_t)
+        end
+
+        # One frame member, drawn from its real section so a slim aluminium
+        # profile does not read the same as a classic timber bead.
+        def frame_member(ents, model, name, material, profile, x, y, z, w, h, t, axis)
+          group = Geom3.group_with(ents, name)
+          gents = group.entities
+
+          case profile
+          when 'slim'
+            Geom3.box(gents, x, y, z, w, t * 0.6, h)
+            Geom3.box(gents, x, y + t * 0.6, z, w, t * 0.4, axis == :v ? h : h * 0.55)
+          when 'rounded'
+            if axis == :v
+              Geom3.prism_z(gents, Geom3.rounded_rect(x, y, w, t, [w, t].min / 2.0), z, h)
+            else
+              Geom3.prism_y(gents, y, t, Geom3.rounded_rect(x, z, w, h, [w, h].min / 2.0))
+            end
+          when 'classic'
+            Geom3.box(gents, x, y, z, w, t, h)
+            bead = [w, h].min * 0.35
+            if axis == :v
+              Geom3.box(gents, x + w - bead, y + t - 6.0, z, bead, 8.0, h)
+            else
+              Geom3.box(gents, x, y + t - 6.0, z + h - bead, w, 8.0, bead)
+            end
+          when 'shadow_gap'
+            Geom3.box(gents, x, y, z, w, t, h)
+            if axis == :v
+              Geom3.box(gents, x + w - 4.0, y, z, 4.0, t * 0.5, h)
+            else
+              Geom3.box(gents, x, y, z + h - 4.0, w, t * 0.5, 4.0)
+            end
+          else # square
+            Geom3.box(gents, x, y, z, w, t, h)
+          end
+
+          Geom3.finish_part(group, model,
+                            name: name, part: 'Door Frame', material: material,
+                            dims: [w, t, h],
+                            length: axis == :v ? h : w, width: axis == :v ? w : h,
+                            thick: t, note: "#{profile} profile")
+        end
+
+        # What sits inside the frame.
+        def infill(ents, model, layout, spec, x, y, z, w, h, frame_t, material)
+          return if w <= 1.0 || h <= 1.0
+
+          case spec['infill']
+          when 'panel'
+            thickness = Util.clamp(frame_t * 0.5, 4.0, 22.0)
+            Geom3.part(ents, model, name: 'Infill Panel', part: 'Front Panel',
+                                    material: spec['panel'],
+                                    x: x, y: y + (frame_t - thickness) / 2.0, z: z,
+                                    w: w, d: thickness, h: h,
+                                    length: h, width: w, thick: thickness, grain: 'height')
+          when 'mesh'
+            group = Geom3.group_with(ents, 'Mesh')
+            gents = group.entities
+            pitch = 40.0
+            wires = (w / pitch).floor
+            rows = (h / pitch).floor
+            (1..[wires, 1].max).each { |i| Geom3.box(gents, x + i * pitch - 1.5, y + frame_t / 2.0 - 1.5, z, 3.0, 3.0, h) }
+            (1..[rows, 1].max).each { |i| Geom3.box(gents, x, y + frame_t / 2.0 - 1.5, z + i * pitch - 1.5, w, 3.0, 3.0) }
+            Geom3.finish_part(group, model, name: 'Mesh', part: 'Infill',
+                                            material: 'alu_anodised', dims: [w, 3.0, h],
+                                            length: h, width: w, thick: 3.0)
+          when 'louvre'
+            blades(ents, model, layout, x, y, z, w, h, frame_t, material)
+          else
+            thickness = Util.clamp(layout.params['front']['glass']['glass_t'].to_f, 3.0, 12.0)
+            Geom3.part(ents, model, name: 'Glass', part: 'Glass',
+                                    material: glass_material(layout),
+                                    x: x, y: y + (frame_t - thickness) / 2.0, z: z,
+                                    w: w, d: thickness, h: h,
+                                    length: h, width: w, thick: thickness)
+          end
+        end
+
+        def glazing_bars(ents, model, spec, material, x, y, z, w, h, frame_t)
+          horizontal = spec['div_h'].to_i
+          vertical = spec['div_v'].to_i
+          return if horizontal.zero? && vertical.zero?
+
+          bar = Util.clamp(spec['bar_w'].to_f, 4.0, 80.0)
+          group = Geom3.group_with(ents, 'Glazing Bars')
+          gents = group.entities
+          (1..horizontal).each do |i|
+            bz = z + h * i / (horizontal + 1).to_f - bar / 2.0
+            Geom3.box(gents, x, y + 2.0, bz, w, frame_t - 4.0, bar)
+          end
+          (1..vertical).each do |i|
+            bx = x + w * i / (vertical + 1).to_f - bar / 2.0
+            Geom3.box(gents, bx, y + 2.0, z, bar, frame_t - 4.0, h)
+          end
+          Geom3.finish_part(group, model, name: 'Glazing Bars', part: 'Door Frame',
+                                          material: material, dims: [w, frame_t, bar],
+                                          length: w, width: bar, thick: frame_t,
+                                          qty: horizontal + vertical)
         end
 
         def glass_full(ents, model, layout, x, y, z, w, h, t)
@@ -154,31 +249,66 @@ module AHW
           "glass_#{layout.params['front']['glass']['type']}"
         end
 
+        # A real louvre: stiles and rails, then tilted blades that overlap so
+        # the door reads as a louvre in elevation and in section.
         def louvre(ents, model, layout, x, y, z, w, h, t, material)
-          frame_w = 60.0
-          Geom3.part(ents, model, name: 'Stile L', part: 'Front Stile', material: material,
-                                  x: x, y: y, z: z, w: frame_w, d: t, h: h,
-                                  length: h, width: frame_w, thick: t, grain: 'height')
-          Geom3.part(ents, model, name: 'Stile R', part: 'Front Stile', material: material,
-                                  x: x + w - frame_w, y: y, z: z, w: frame_w, d: t, h: h,
-                                  length: h, width: frame_w, thick: t, grain: 'height')
-          inner_w = w - 2 * frame_w
-          return if inner_w <= 1.0
+          frame_w = Util.clamp([w, h].min * 0.12, 45.0, 90.0)
+          [['Stile L', x, z, frame_w, h, :v],
+           ['Stile R', x + w - frame_w, z, frame_w, h, :v],
+           ['Rail B', x + frame_w, z, w - 2 * frame_w, frame_w, :h],
+           ['Rail T', x + frame_w, z + h - frame_w, w - 2 * frame_w, frame_w, :h]]
+            .each do |(name, fx, fz, fw, fh, axis)|
+            next if fw <= 0.5 || fh <= 0.5
 
-          pitch = 44.0
-          slat_t = 10.0
-          count = ((h - 20.0) / pitch).floor
-          count = 1 if count < 1
-          count.times do |i|
-            slat_z = z + 10.0 + i * pitch
-            slat = Geom3.group_with(ents, 'Louvre Slat')
-            Geom3.box(slat.entities, x + frame_w, y + 2.0, slat_z, inner_w, t - 4.0, slat_t)
-            Geom3.rotate!(slat, Geom3.p3(x + frame_w, y + 2.0, slat_z + slat_t / 2.0),
-                          ::Geom::Vector3d.new(1, 0, 0), 20.0)
-            Geom3.finish_part(slat, model, name: 'Louvre Slat', part: 'Louvre Slat',
-                                           material: material, dims: [inner_w, t - 4.0, slat_t],
-                                           length: inner_w, width: 44.0, thick: slat_t)
+            Geom3.part(ents, model, name: name, part: axis == :v ? 'Front Stile' : 'Front Rail',
+                                    material: material,
+                                    x: fx, y: y, z: fz, w: fw, d: t, h: fh,
+                                    length: axis == :v ? h : fw, width: axis == :v ? fw : fh,
+                                    thick: t, grain: axis == :v ? 'height' : 'length',
+                                    edges: 'all')
           end
+
+          blades(ents, model, layout, x + frame_w, y, z + frame_w,
+                 w - 2 * frame_w, h - 2 * frame_w, t, material)
+        end
+
+        # The blades themselves, shared by the louvre door and the louvre
+        # infill of a framed door.
+        def blades(ents, model, layout, x, y, z, w, h, t, material)
+          return if w <= 20.0 || h <= 20.0
+
+          angle = 22.0
+          blade_w = Util.clamp(t * 2.6, 26.0, 46.0)   # across the blade
+          blade_t = Util.clamp(t * 0.45, 5.0, 10.0)   # blade thickness
+          rad = angle * Math::PI / 180.0
+          pitch = blade_w * Math.cos(rad) * 0.82      # overlap, so no see-through
+          count = ((h - 6.0) / pitch).floor
+          count = 1 if count < 1
+          spare = h - (count - 1) * pitch
+          first_z = z + spare / 2.0
+
+          # blade cross-section in the YZ plane, rotated about its centre
+          ux = Math.cos(rad)
+          uz = -Math.sin(rad)
+          vx = Math.sin(rad)
+          vz = Math.cos(rad)
+          centre_y = y + t / 2.0
+
+          group = Geom3.group_with(ents, 'Louvre Blades')
+          gents = group.entities
+          count.times do |i|
+            cz = first_z + i * pitch
+            corners = [[1, 1], [-1, 1], [-1, -1], [1, -1]].map do |(a, b)|
+              [centre_y + a * blade_w / 2.0 * ux + b * blade_t / 2.0 * vx,
+               cz + a * blade_w / 2.0 * uz + b * blade_t / 2.0 * vz]
+            end
+            Geom3.prism_x(gents, x, w, corners)
+          end
+          Geom3.finish_part(group, model,
+                            name: 'Louvre Blade', part: 'Louvre Blade', material: material,
+                            dims: [w, blade_t, blade_w],
+                            length: w, width: blade_w, thick: blade_t,
+                            qty: count, note: "#{angle.round} deg tilt, #{pitch.round} mm pitch")
         end
 
         def ribbed(ents, model, layout, x, y, z, w, h, t, material)
@@ -229,6 +359,8 @@ module AHW
           kind = opts[:handle] || spec['type']
           return if Const::HANDLE_NONE.include?(kind)
           return unless Const::HANDLE_TYPES.include?(kind)
+          # a hidden grip lives on the carcass, not on the leaf
+          return if spec['mount'] == 'hidden'
 
           anchor = anchor_for(spec, kind, x, y, z, w, h, t, opts)
           return if anchor.nil?
@@ -238,12 +370,13 @@ module AHW
           finish = opts[:handle_material] || spec['material']
 
           case kind
+          when *Const::HANDLE_PROFILES
+            profile_handle(gents, anchor, spec, kind, x, w)
           when 'bar'          then bar_handle(gents, anchor, spec, :round)
           when 'bar_square'   then bar_handle(gents, anchor, spec, :square)
           when 'tubular'      then bar_handle(gents, anchor, spec, :round, 8.0)
           when 't_bar'        then t_bar_handle(gents, anchor, spec)
           when 'd_handle'     then d_handle(gents, anchor, spec)
-          when 'long_profile' then long_profile_handle(gents, anchor, spec, x, w, t)
           when 'knob_round', 'knob_square', 'knob_knurled',
                'knob_ceramic', 'knob_crystal' then knob_handle(gents, anchor, spec, kind)
           when 'cup_pull'     then cup_handle(gents, anchor, spec)
@@ -275,11 +408,13 @@ module AHW
           horizontal = opts[:handle_horizontal]
           horizontal = %w[top bottom centre].include?(spec['pos']) if horizontal.nil?
           horizontal = true if Const::HANDLE_ALWAYS_HORIZONTAL.include?(kind)
-          horizontal = true if kind == 'long_profile'
-
           offset = spec['offset'].to_f
           length = spec['length'].to_f
+          # a built-in handle is let into the leaf instead of sitting on it
           face_y = y + t
+          if spec['mount'] == 'built_in'
+            face_y = y + t - Util.clamp(spec['proj'].to_f, 0.0, t - 2.0)
+          end
 
           if horizontal
             length = Util.clamp(length, 20.0, [w - 16.0, 20.0].max)
@@ -290,18 +425,17 @@ module AHW
                        else z + h - offset
                        end
             centre_z = Util.clamp(centre_z, z + 15.0, z + h - 15.0)
-            { horizontal: true, start: start, length: length,
+            { horizontal: true, start: start, length: length, mount: spec['mount'],
               cx: x + w / 2.0, cz: centre_z, face_y: face_y, back_y: y,
               leaf_x: x, leaf_z: z, leaf_w: w, leaf_h: h, t: t }
           else
             length = Util.clamp(length, 20.0, [h - 16.0, 20.0].max)
             start_z = z + (h - length) / 2.0
-            centre_x = case spec['pos']
-                       when 'right' then x + w - offset
-                       else x + offset
-                       end
+            side = spec['side']
+            side = spec['pos'] == 'right' ? 'right' : 'left' if side == 'auto'
+            centre_x = side == 'right' ? x + w - offset : x + offset
             centre_x = Util.clamp(centre_x, x + 15.0, x + w - 15.0)
-            { horizontal: false, start: start_z, length: length,
+            { horizontal: false, start: start_z, length: length, mount: spec['mount'],
               cx: centre_x, cz: z + h / 2.0, face_y: face_y, back_y: y,
               leaf_x: x, leaf_z: z, leaf_w: w, leaf_h: h, t: t }
           end
@@ -393,14 +527,48 @@ module AHW
           end
         end
 
-        # A continuous profile across the full width of the leaf, the
-        # handleless look that still reads as a handle in elevation.
-        def long_profile_handle(ents, anchor, spec, x, w, _t)
-          dia = Util.clamp(spec['dia'].to_f, 8.0, 60.0)
-          proj = Util.clamp(spec['proj'].to_f, 10.0, 60.0)
-          Geom3.box(ents, x, anchor[:face_y], anchor[:cz] - dia / 2.0, w, proj, dia)
-          Geom3.box(ents, x, anchor[:face_y] + proj - 6.0, anchor[:cz] - dia / 2.0 - 12.0,
-                    w, 6.0, 12.0)
+        # Continuous aluminium profiles. These run the full leaf, so they are
+        # drawn from a real section rather than sized like a pull handle.
+        def profile_handle(ents, anchor, spec, kind, x, w)
+          hh = Util.clamp(spec['dia'].to_f * 2.0, 18.0, 80.0)   # face height of the profile
+          proj = Util.clamp(spec['proj'].to_f, 8.0, 60.0)
+          wt = Util.clamp(proj / 4.0, 1.5, 8.0)
+          y0 = anchor[:face_y]
+          top = anchor[:cz] + hh / 2.0
+          bottom = anchor[:cz] - hh / 2.0
+
+          section =
+            case kind
+            when 'profile_c'
+              # channel with a return top and bottom
+              [[y0, bottom], [y0, top], [y0 + proj, top], [y0 + proj, top - wt],
+               [y0 + wt, top - wt], [y0 + wt, bottom + wt], [y0 + proj, bottom + wt],
+               [y0 + proj, bottom]]
+            when 'profile_l'
+              # single return at the top
+              [[y0, bottom], [y0, top], [y0 + proj, top], [y0 + proj, top - wt],
+               [y0 + wt, top - wt], [y0 + wt, bottom]]
+            when 'profile_j'
+              # return with an upturned lip, the J grip
+              [[y0, bottom], [y0, top], [y0 + proj, top], [y0 + proj, top - wt * 2.2],
+               [y0 + proj - wt, top - wt * 2.2], [y0 + proj - wt, top - wt],
+               [y0 + wt, top - wt], [y0 + wt, bottom]]
+            when 'profile_round'
+              half = (0..10).map do |i|
+                angle = Math::PI * i / 10.0 - Math::PI / 2.0
+                [y0 + proj * Math.cos(angle) * 0.5 + proj * 0.5,
+                 anchor[:cz] + hh / 2.0 * Math.sin(angle)]
+              end
+              [[y0, bottom]] + half + [[y0, top]]
+            when 'profile_trim'
+              # flat trim, barely proud of the face
+              [[y0, bottom], [y0, top], [y0 + wt * 1.5, top], [y0 + wt * 1.5, bottom]]
+            else # profile_slim
+              [[y0, bottom], [y0, top], [y0 + proj, top],
+               [y0 + proj, top - hh * 0.45], [y0 + wt, bottom]]
+            end
+
+          Geom3.prism_x(ents, x, w, section)
         end
 
         def knob_handle(ents, anchor, spec, kind)

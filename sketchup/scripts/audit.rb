@@ -13,7 +13,11 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.1.0'
+    PLUGIN_VERSION = '1.2.0'
+    PLUGIN_COMPANY = 'AHW Architects Masr'
+    PLUGIN_AUTHOR  = 'Mahmoud Al wardany'
+    PLUGIN_AUTHOR_AR = 'محمود الوردانى'
+    PLUGIN_WEBSITE = 'https://ahwspaces.com'
     PATH_ROOT = File.expand_path('../src', __dir__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
     PATH_HTML = File.join(PATH_LIB, 'ui', 'html').freeze
@@ -70,7 +74,10 @@ catalogues = {
   'HANDLE_FINISHES' => Const::HANDLE_FINISHES, 'HINGE_TYPES' => Const::HINGE_TYPES,
   'RUNNER_TYPES' => Const::RUNNER_TYPES, 'LIFT_SYSTEMS' => Const::LIFT_SYSTEMS,
   'FRONT_KINDS' => Const::FRONT_KINDS, 'APPLIANCES' => Const::APPLIANCES,
-  'INTERIOR_ACCESSORIES' => Const::INTERIOR_ACCESSORIES, 'GLASS_TYPES' => Const::GLASS_TYPES
+  'INTERIOR_ACCESSORIES' => Const::INTERIOR_ACCESSORIES, 'GLASS_TYPES' => Const::GLASS_TYPES,
+  'HANDLE_MOUNTS' => Const::HANDLE_MOUNTS, 'INSERT_POINTS' => Const::INSERT_POINTS,
+  'FRAME_MATERIALS' => Const::FRAME_MATERIALS, 'FRAME_PROFILES' => Const::FRAME_PROFILES,
+  'FRAME_INFILLS' => Const::FRAME_INFILLS, 'DRESSING_LAYOUTS' => Const::DRESSING_LAYOUTS
 }
 catalogues.each do |name, list|
   if dialog.include?("Const::#{name}")
@@ -140,14 +147,58 @@ combos = {
   'design styles'   => Styles.keys,
   'worktop edges'   => %w[square bevel bullnose mitred],
   'plinth modes'    => %w[panel legs floating wall_hung none],
-  'corner modes'    => %w[blind diagonal l]
+  'corner modes'    => %w[blind diagonal l],
+  'handle mounts'   => Const::HANDLE_MOUNTS,
+  'frame profiles'  => Const::FRAME_PROFILES,
+  'frame infills'   => Const::FRAME_INFILLS,
+  'insert points'   => Const::INSERT_POINTS,
+  'dressing rooms'  => Const::DRESSING_LAYOUTS
 }
 combos.each { |label, list| puts format('  %-16s %3d', label, list.size) }
 total = combos.values.map(&:size).sum
 puts "  #{total} variants exercised by sketchup/test/run_tests.rb"
 
-# ------------------------------------------------------------ 6. presets
-section '6. Preset library'
+# build one of everything so the export sections below have real content
+ALL_TYPES.each { |type| Builders::Unit.create(model, Params.defaults(type)) }
+built = Store.all_units(model.entities).size
+finding('Builders', 'not every unit type produced a group') if built < ALL_TYPES.size
+puts format('  %-16s %3d units built into the audit model', 'model', built)
+
+# ------------------------------------------------------- 6. pricing wiring
+section '6. Pricing and exports'
+pricing = Pricing.defaults
+puts format('  %-28s %s', 'default uplifts', pricing['uplifts'].map { |u| "#{u['name'].split(' /').first} #{u['percent']}%" }.join(', '))
+boq = Export::Report.boq(model, false, pricing)
+finding('Pricing', 'BOQ subtotal is not positive') unless boq['subtotal'].positive?
+finding('Pricing', 'BOQ total does not include the uplifts') unless boq['total'] > boq['subtotal']
+nest = Export::Nesting.plan(Export::Report.cutlist(model, false),
+                            pricing['sheet']['w'], pricing['sheet']['h'])
+finding('Nesting', 'no sheets planned') if nest.empty?
+puts format('  %-28s %d materials, %d sheets', 'nesting', nest.size,
+            nest.map { |r| r['sheets'] }.sum)
+orders = Export::Report.job_order(model, false)
+finding('Job order', 'no units in the job order') if orders.empty?
+puts format('  %-28s %d units', 'job order', orders.size)
+
+# -------------------------------------------------- 6b. dialog wiring
+%w[pricing_save pricing_reset dressing_build apply_style].each do |callback|
+  finding('UI', "callback #{callback} is not registered") unless dialog.include?("'#{callback}'")
+end
+%w[pricing nesting open_tab].each do |receiver|
+  finding('UI', "the dialog never calls #{receiver}") unless JS.include?("#{receiver}:")
+end
+%w[uplift-add pricing-save room-build].each do |action|
+  finding('UI', "action #{action} has no handler") unless JS.include?("'#{action}'")
+end
+brand = [PLUGIN_COMPANY, PLUGIN_AUTHOR, PLUGIN_WEBSITE]
+main = RB[File.join(PATH_LIB, 'main.rb')]
+brand.each do |value|
+  key = value == PLUGIN_COMPANY ? 'PLUGIN_COMPANY' : (value == PLUGIN_AUTHOR ? 'PLUGIN_AUTHOR' : 'PLUGIN_WEBSITE')
+  finding('Branding', "#{key} never appears in the menus or About") unless main.include?(key)
+end
+
+# ------------------------------------------------------------ 7. presets
+section '7. Preset library'
 presets = Export::Catalog.list
 broken = presets.reject do |entry|
   params = Export::Catalog.load(entry['file'])
@@ -157,7 +208,7 @@ puts "  #{presets.size} presets, #{presets.size - broken.size} build cleanly."
 broken.each { |entry| finding('Presets', "#{entry['name']} does not build") }
 
 # ------------------------------------------------------------- 7. sizes
-section '7. Source inventory'
+section '8. Source inventory'
 RB.sort_by { |path, _| path }.each do |path, body|
   puts format('  %-46s %5d lines', path.sub("#{PATH_ROOT}/", ''), body.lines.size)
 end

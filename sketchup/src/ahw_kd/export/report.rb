@@ -145,9 +145,10 @@ module AHW
         end
 
         # ------------------------------------------------------------- BOQ
-        # Area by material with an indicative supply-and-fix rate, plus a
-        # per-unit summary — the two tables a fit-out estimator actually wants.
-        def boq(model, selection_only = false, currency = 'USD')
+        # Area by material at the project's own rates, then the uplift lines
+        # (fabrication, wastage, transport) on top, plus a per-unit summary.
+        def boq(model, selection_only = false, pricing = nil)
+          pricing ||= Pricing.read(model)
           by_material = Hash.new { |h, k| h[k] = { 'area' => 0.0, 'qty' => 0 } }
           by_unit = []
 
@@ -166,7 +167,7 @@ module AHW
               by_material[row['material']]['area'] += area
               by_material[row['material']]['qty'] += row['qty']
               unit_area += area
-              unit_cost += area * Materials.rate(row['material'])
+              unit_cost += area * Pricing.rate(pricing, row['material'])
             end
 
             layout = Layout.new(params)
@@ -174,6 +175,7 @@ module AHW
               'unit'      => Store.display_name(params),
               'type'      => params['type'],
               'room'      => params['meta']['room'],
+              'style'     => params['style'],
               'w'         => params['w'].round,
               'h'         => layout.total_h.round,
               'd'         => layout.total_d.round,
@@ -186,33 +188,103 @@ module AHW
           end
 
           materials = by_material.map do |key, value|
-            rate = Materials.rate(key)
+            rate = Pricing.rate(pricing, key)
             { 'material' => Materials.label(key), 'key' => key,
               'area_m2' => value['area'].round(3), 'qty' => value['qty'],
-              'rate' => rate, 'amount' => (value['area'] * rate).round(2) }
+              'rate' => rate, 'custom' => Pricing.overridden?(pricing, key),
+              'amount' => (value['area'] * rate).round(2) }
           end.sort_by { |row| -row['amount'] }
 
-          { 'currency' => currency,
+          materials_total = materials.map { |row| row['amount'] }.sum
+          priced = Pricing.summarise(pricing, materials_total)
+
+          { 'currency'  => pricing['currency'],
             'materials' => materials,
-            'units' => by_unit,
-            'total' => materials.map { |row| row['amount'] }.sum.round(2),
+            'units'     => by_unit,
+            'uplifts'   => priced['lines'],
+            'subtotal'  => priced['materials'],
+            'total'     => priced['total'],
             'generated' => Util.timestamp }
         end
 
         def boq_csv(data)
-          lines = ["AHW Kitchen & Dressing — BOQ,#{data['generated']}", '']
-          lines << 'Material,Area m2,Pieces,Rate,Amount'
+          lines = ["#{PLUGIN_NAME} — BOQ,#{data['generated']}",
+                   "#{PLUGIN_COMPANY},#{PLUGIN_WEBSITE}",
+                   "Prepared with the plugin developed by,#{PLUGIN_AUTHOR}",
+                   "Currency,#{data['currency']}", '']
+          lines << 'Material,Area m2,Pieces,Rate,Project rate,Amount'
           data['materials'].each do |row|
-            lines << [row['material'], row['area_m2'], row['qty'], row['rate'], row['amount']]
+            lines << [row['material'], row['area_m2'], row['qty'], row['rate'],
+                      row['custom'] ? 'yes' : 'library', row['amount']]
                      .map { |c| Util.csv_cell(c) }.join(',')
           end
-          lines << ['', '', '', 'TOTAL', data['total']].join(',')
+          lines << ['', '', '', '', 'Materials subtotal', data['subtotal']].join(',')
+          data['uplifts'].each do |row|
+            label = "#{row['name']} (#{row['percent']}% on #{row['on']})"
+            lines << ['', '', '', '', Util.csv_cell(label), row['amount']].join(',')
+          end
+          lines << ['', '', '', '', 'TOTAL', data['total']].join(',')
           lines << ''
-          lines << 'Unit,Type,Room,W,H,D,Qty,Panel m2,Front m2,Cost'
+          lines << 'Unit,Type,Style,Room,W,H,D,Qty,Panel m2,Front m2,Cost'
           data['units'].each do |row|
-            lines << [row['unit'], row['type'], row['room'], row['w'], row['h'], row['d'],
-                      row['qty'], row['panel_m2'], row['front_m2'], row['cost']]
-                     .map { |c| Util.csv_cell(c) }.join(',')
+            lines << [row['unit'], row['type'], row['style'], row['room'], row['w'],
+                      row['h'], row['d'], row['qty'], row['panel_m2'], row['front_m2'],
+                      row['cost']].map { |c| Util.csv_cell(c) }.join(',')
+          end
+          lines.join("\n")
+        end
+
+        # --------------------------------------------------------- job order
+        # The sheet the assembly workshop works from: one block per unit with
+        # its panels, its hardware and its finishes.
+        def job_order(model, selection_only = false)
+          units(model, selection_only).map do |unit|
+            params = Store.read(unit)
+            next unless params
+
+            rows = parts_of(unit)
+            layout = Layout.new(params)
+            {
+              'unit'      => Store.display_name(params),
+              'type'      => params['type'],
+              'style'     => params['style'],
+              'room'      => params['meta']['room'],
+              'qty'       => params['meta']['qty'],
+              'size'      => "#{params['w'].round} x #{layout.total_h.round} x #{layout.total_d.round}",
+              'carcass'   => Materials.label(params['materials']['carcass']),
+              'front'     => Materials.label(params['materials']['front']),
+              'finish'    => "#{params['front']['style']} / #{params['front']['handle']['type']}" \
+                             " / #{Materials.label(params['front']['handle']['material'])}",
+              'panels'    => rows.select { |row| sheet_material?(row['material']) },
+              'hardware'  => rows.select { |row| hardware_part?(row['part']) },
+              'note'      => params['meta']['note']
+            }
+          end.compact
+        end
+
+        def job_order_csv(orders)
+          lines = ["#{PLUGIN_NAME} — Workshop job order,#{Util.timestamp}",
+                   "#{PLUGIN_COMPANY},#{PLUGIN_WEBSITE}", '']
+          orders.each do |order|
+            lines << "UNIT,#{Util.csv_cell(order['unit'])},#{Util.csv_cell(order['type'])}," \
+                     "qty #{order['qty']},#{Util.csv_cell(order['size'])}"
+            lines << "Carcass,#{Util.csv_cell(order['carcass'])},Front," \
+                     "#{Util.csv_cell(order['front'])},#{Util.csv_cell(order['finish'])}"
+            lines << 'Part,Material,Length,Width,Thickness,Qty,Grain,Note'
+            order['panels'].each do |row|
+              lines << [row['part'], Materials.label(row['material']), row['length_mm'],
+                        row['width_mm'], row['thick_mm'], row['qty'], row['grain'], row['note']]
+                       .map { |c| Util.csv_cell(c) }.join(',')
+            end
+            unless order['hardware'].empty?
+              lines << 'Hardware,Qty,Note'
+              order['hardware'].each do |row|
+                lines << [row['part'], row['qty'], row['note']]
+                         .map { |c| Util.csv_cell(c) }.join(',')
+              end
+            end
+            lines << Util.csv_cell("Note: #{order['note']}") unless order['note'].to_s.empty?
+            lines << ''
           end
           lines.join("\n")
         end

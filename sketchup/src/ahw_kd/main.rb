@@ -6,12 +6,13 @@ require 'json'
 module AHW
   module KD
     %w[
-      core/const core/util core/log core/styles core/params core/materials core/geom
+      core/const core/util core/log core/styles core/params core/materials
+      core/pricing core/geom
       core/layout core/store
       builders/panel builders/drawer builders/appliance builders/carcass
-      builders/fronts builders/interior builders/worktop builders/special
-      builders/unit
-      export/report export/catalog
+      builders/fronts builders/interior builders/worktop builders/faceted builders/special
+      builders/unit builders/dressing
+      export/report export/nesting export/catalog
       ui/dialog ui/tools ui/observers
     ].each { |file| require File.join(PATH_LIB, "#{file}.rb") }
 
@@ -132,15 +133,51 @@ module AHW
           return ::UI.messagebox('Nothing to export.') if data['units'].empty?
 
           path = Export::Report.save(Export::Report.boq_csv(data), 'ahw_boq.csv')
-          ::UI.messagebox("BOQ saved:\n#{path}\nEstimated total: #{data['total']}") if path
+          if path
+            ::UI.messagebox("BOQ saved:\n#{path}\n" \
+                            "Total: #{data['total']} #{data['currency']}")
+          end
+        when :nesting
+          settings = Pricing.read(model)
+          rows = Export::Report.cutlist(model, selection_only)
+          return ::UI.messagebox('Nothing to nest.') if rows.empty?
+
+          results = Export::Nesting.plan(rows, settings['sheet']['w'], settings['sheet']['h'])
+          path = Export::Report.save(Export::Nesting.csv(results, settings['currency']),
+                                     'ahw_nesting.csv')
+          sheets = results.map { |row| row['sheets'] }.sum
+          ::UI.messagebox("Nesting saved:\n#{path}\nSheets required: #{sheets}") if path
+        when :job_order
+          orders = Export::Report.job_order(model, selection_only)
+          return ::UI.messagebox('Nothing to export.') if orders.empty?
+
+          path = Export::Report.save(Export::Report.job_order_csv(orders), 'ahw_job_order.csv')
+          ::UI.messagebox("Job order saved:\n#{path}\nUnits: #{orders.size}") if path
         end
       end
 
       def about
-        ::UI.messagebox("#{PLUGIN_NAME} #{PLUGIN_VERSION}\n" \
-                        "AHW Architects Master\n\n" \
-                        "Parametric kitchen, vanity and dressing units.\n" \
-                        "Select a unit and open the designer to edit it.")
+        answer = ::UI.messagebox(
+          "#{PLUGIN_NAME}  v#{PLUGIN_VERSION}\n" \
+          "#{PLUGIN_COMPANY}\n" \
+          "Developed by #{PLUGIN_AUTHOR}  |  تطوير: #{PLUGIN_AUTHOR_AR}\n" \
+          "#{PLUGIN_WEBSITE}\n\n" \
+          "Parametric kitchen, bathroom vanity and dressing units:\n" \
+          "carcass, fronts, handles, worktops, appliances, interiors,\n" \
+          "project pricing, cut list with sheet nesting, BOQ and job order.\n\n" \
+          'Open the website?', MB_YESNO
+        )
+        ::UI.openURL(PLUGIN_WEBSITE) if answer == IDYES
+      end
+
+      def dressing_room
+        Gui::Dialog.show
+        ::UI.start_timer(0.3, false) { Gui::Dialog.call('open_tab', 'room') }
+      end
+
+      def pricing
+        Gui::Dialog.show
+        ::UI.start_timer(0.3, false) { Gui::Dialog.call('open_tab', 'pricing') }
       end
     end
 
@@ -193,6 +230,9 @@ module AHW
           quick.add_item(title) { Commands.quick_insert(type) }
         end
 
+        menu.add_item('Dressing Room Generator') { Commands.dressing_room }
+        menu.add_item('Project Pricing') { Commands.pricing }
+
         %w[base wall wardrobe vanity].each do |type|
           toolbar.add_item(command(type.capitalize, "unit_#{type}", "Insert #{type}",
                                    "Place a parametric #{type} unit") { Commands.quick_insert(type) })
@@ -223,14 +263,21 @@ module AHW
         hardware = command('Hardware Schedule', 'hardware', 'Export the hardware schedule',
                            'Hinges, runners, lifts, handles and accessories') { Commands.export(:hardware) }
         boq = command('BOQ', 'boq', 'Export the bill of quantities',
-                      'Area by material with indicative rates') { Commands.export(:boq) }
-        [cutlist, hardware, boq].each do |cmd|
+                      'Area by material at project rates, with uplifts') { Commands.export(:boq) }
+        nesting = command('Sheet Nesting', 'cutlist', 'Optimise the panels onto sheets',
+                          'How many boards the job needs and how much is waste') do
+          Commands.export(:nesting)
+        end
+        job = command('Job Order', 'hardware', 'Export the workshop job order',
+                      'Per unit: panels, hardware and finishes') { Commands.export(:job_order) }
+        [cutlist, hardware, nesting, boq, job].each do |cmd|
           reports.add_item(cmd)
           toolbar.add_item(cmd)
         end
 
         menu.add_separator
-        menu.add_item('About') { Commands.about }
+        menu.add_item("About #{PLUGIN_NAME}") { Commands.about }
+        menu.add_item("#{PLUGIN_COMPANY} — #{PLUGIN_WEBSITE}") { ::UI.openURL(PLUGIN_WEBSITE) }
 
         toolbar.restore
         toolbar

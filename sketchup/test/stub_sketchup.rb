@@ -135,6 +135,9 @@ VK_LEFT = 37
 VK_RIGHT = 39
 VK_UP = 38
 VK_DOWN = 40
+MB_YESNO = 4
+IDYES = 6
+IDNO = 7
 
 module Sketchup
   class Color
@@ -348,6 +351,15 @@ module Sketchup
       @materials = Materials.new
       @selection = Selection.new
       @definitions = Definitions.new
+      @attributes = {}
+    end
+
+    def get_attribute(dict, key, default = nil)
+      (@attributes[dict] || {}).fetch(key, default)
+    end
+
+    def set_attribute(dict, key, value)
+      (@attributes[dict] ||= {})[key] = value
     end
 
     def active_entities = @entities
@@ -404,7 +416,8 @@ module UI
 
   module_function
 
-  def messagebox(_text) = 1
+  def messagebox(_text, _type = 0) = 1
+  def openURL(_url) = true
   def openpanel(*_args) = nil
   def savepanel(*_args) = nil
   def menu(_name) = Menu.new

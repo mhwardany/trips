@@ -1,17 +1,17 @@
 {
-  "name": "D Corner wardrobe L 1000",
+  "name": "K Tall drawers + oven + microwave 600",
   "saved": "2026-09-09 12:55",
   "plugin": "1.2.0",
   "params": {
     "schema": 3,
-    "type": "corner_wardrobe",
-    "family": "dressing",
+    "type": "tall",
+    "family": "kitchen",
     "style": "modern",
     "insert": "back_left",
-    "name": "D Corner wardrobe L 1000",
-    "w": 1000.0,
-    "h": 2300.0,
-    "d": 1000.0,
+    "name": "K Tall drawers + oven + microwave 600",
+    "w": 600.0,
+    "h": 2100.0,
+    "d": 580.0,
     "panel_t": 18.0,
     "front_t": 18.0,
     "back_t": 6.0,
@@ -25,8 +25,8 @@
     "scribe": 20.0,
     "plinth": {
       "mode": "panel",
-      "h": 100.0,
-      "setback": 40.0,
+      "h": 150.0,
+      "setback": 50.0,
       "leg_dia": 40.0,
       "returns": false,
       "shadow": 0.0,
@@ -76,6 +76,82 @@
     },
     "rows": [
       {
+        "kind": "drawer",
+        "h": 180.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": null,
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "legrabox",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      },
+      {
+        "kind": "drawer",
+        "h": 180.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": null,
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "legrabox",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      },
+      {
+        "kind": "appliance",
+        "h": 0.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": "oven",
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "tandem",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      },
+      {
+        "kind": "appliance",
+        "h": 0.0,
+        "cols": 1,
+        "hinge": "left",
+        "style": null,
+        "lift": "hf",
+        "panels": 2,
+        "appl": "microwave",
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "tandem",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
+      },
+      {
         "kind": "door",
         "h": 0.0,
         "cols": 1,
@@ -93,10 +169,29 @@
           "insert": "none"
         },
         "note": ""
+      },
+      {
+        "kind": "lift",
+        "h": 350.0,
+        "cols": 1,
+        "hinge": "top",
+        "style": null,
+        "lift": "hk",
+        "panels": 2,
+        "appl": null,
+        "appl_integrated": true,
+        "block": "",
+        "drawer": {
+          "box": true,
+          "runner": "tandem",
+          "box_h": 0.0,
+          "insert": "none"
+        },
+        "note": ""
       }
     ],
     "interior": {
-      "shelves": 2,
+      "shelves": 4,
       "shelf_mode": "adjustable",
       "shelf_setback": 20.0,
       "dividers": 0,
@@ -104,24 +199,15 @@
 
       ],
       "accessories": [
-        {
-          "type": "hanging_rail",
-          "z": 1650.0,
-          "x": 0.0,
-          "w": 0.0,
-          "count": 1,
-          "angle": 0.0,
-          "depth": 0.0,
-          "note": ""
-        }
+
       ]
     },
     "corner": {
-      "mode": "l",
+      "mode": "blind",
       "side": "left",
       "blind_w": 300.0,
-      "return_w": 1400.0,
-      "return_d": 600.0,
+      "return_w": 900.0,
+      "return_d": 560.0,
       "front_b": true
     },
     "chamfer": {

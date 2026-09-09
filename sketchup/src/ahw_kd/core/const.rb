@@ -19,8 +19,9 @@ module AHW
       # ---------------------------------------------------------------- units
       # family => list of unit types
       FAMILIES = {
-        'kitchen'  => %w[base base_sink base_hob base_corner base_appliance
-                         drawer_bank tall wall wall_lift wall_open island hood],
+        'kitchen'  => %w[base base_sink base_hob base_corner base_chamfer
+                         base_appliance drawer_bank tall wall wall_corner
+                         wall_chamfer wall_lift wall_open island hood],
         'bathroom' => %w[vanity vanity_wall vanity_open mirror_unit tallboy],
         'dressing' => %w[wardrobe wardrobe_sliding dressing_open corner_wardrobe
                          shoe_unit drawer_bank island_dresser]
@@ -36,6 +37,9 @@ module AHW
         'base_sink'       => [800,  720,  560],
         'base_hob'        => [600,  720,  560],
         'base_corner'     => [900,  720,  560],
+        'base_chamfer'    => [400,  720,  560],
+        'wall_corner'     => [600,  720,  350],
+        'wall_chamfer'    => [350,  720,  350],
         'base_appliance'  => [600,  720,  560],
         'drawer_bank'     => [600,  720,  560],
         'tall'            => [600, 2100,  580],
@@ -58,18 +62,19 @@ module AHW
       }.freeze
 
       # Types that sit on the floor (need a plinth / legs).
-      FLOOR_TYPES = %w[base base_sink base_hob base_corner base_appliance drawer_bank
-                       tall island vanity tallboy wardrobe wardrobe_sliding
-                       dressing_open corner_wardrobe shoe_unit island_dresser].freeze
+      FLOOR_TYPES = %w[base base_sink base_hob base_corner base_chamfer
+                       base_appliance drawer_bank tall island vanity tallboy
+                       wardrobe wardrobe_sliding dressing_open corner_wardrobe
+                       shoe_unit island_dresser].freeze
 
       # Types that may carry a worktop.
-      WORKTOP_TYPES = %w[base base_sink base_hob base_corner base_appliance
-                         drawer_bank island vanity vanity_wall vanity_open
-                         island_dresser].freeze
+      WORKTOP_TYPES = %w[base base_sink base_hob base_corner base_chamfer
+                         base_appliance drawer_bank island vanity vanity_wall
+                         vanity_open island_dresser].freeze
 
       # Types hung off the wall.
-      WALL_TYPES = %w[wall wall_lift wall_open hood vanity_wall vanity_open
-                      mirror_unit].freeze
+      WALL_TYPES = %w[wall wall_corner wall_chamfer wall_lift wall_open hood
+                      vanity_wall vanity_open mirror_unit].freeze
 
       # ---------------------------------------------------------- front kinds
       FRONT_KINDS = %w[door doors2 drawer lift flap open appliance sliding
@@ -101,6 +106,7 @@ module AHW
         knob_round knob_square knob_knurled knob_ceramic knob_crystal
         cup_pull ring_pull drop_pull shell_pull
         edge_pull finger_pull j_profile gola push_open
+        profile_c profile_l profile_j profile_slim profile_round profile_trim
         recessed_round recessed_rect
         leather_strap timber_dowel mid_century
       ].freeze
@@ -108,10 +114,23 @@ module AHW
       # Handles whose geometry reads horizontally by nature (cup pulls, edge
       # profiles), regardless of the position setting.
       HANDLE_ALWAYS_HORIZONTAL = %w[cup_pull shell_pull long_profile
-                                    finger_pull j_profile gola].freeze
+                                    finger_pull j_profile gola
+                                    profile_c profile_l profile_j
+                                    profile_slim profile_round profile_trim].freeze
+
+      # Continuous aluminium profiles: they run the full leaf, so they are
+      # sized by the leaf, not by the handle length.
+      HANDLE_PROFILES = %w[profile_c profile_l profile_j profile_slim
+                           profile_round profile_trim long_profile].freeze
+
+      # How the handle meets the leaf.
+      #   applied   - screwed onto the face (لق)
+      #   built_in  - let into the leaf edge (بلت إن)
+      #   hidden    - no leaf hardware; the grip is a channel in the carcass
+      HANDLE_MOUNTS = %w[applied built_in hidden].freeze
 
       # Handles that need no leaf-mounted geometry at all.
-      HANDLE_NONE = %w[none j_profile gola push_open].freeze
+      HANDLE_NONE = %w[none push_open].freeze
 
       # Finishes offered for handles in the dialog, in the order a spec sheet
       # would list them.
@@ -132,6 +151,11 @@ module AHW
 
       HINGE_TYPES = %w[clip_top_110 clip_top_155 blumotion_110 thick_door_95
                        glass_door_170 pie_corner].freeze
+
+      # Framed doors: aluminium or timber surround, and what sits inside it.
+      FRAME_MATERIALS = %w[aluminium timber none].freeze
+      FRAME_PROFILES  = %w[square slim rounded classic shadow_gap].freeze
+      FRAME_INFILLS   = %w[glass panel mesh louvre].freeze
 
       # Design styles live in Styles::SPECS - that module owns the list so
       # the names and the specs they map to can never drift apart.
@@ -182,6 +206,14 @@ module AHW
         'tv'          => [1100,  650,  70],
         'custom'      => [600,  600, 550]
       }.freeze
+
+      # The corner of the unit that lands on the point you click. Back left is
+      # the default because a run of units then just steps along the wall.
+      INSERT_POINTS = %w[back_left back_right front_left front_right
+                         back_centre front_centre centre].freeze
+
+      # Dressing room configurations generated as a run of modules.
+      DRESSING_LAYOUTS = %w[single l_shape u_shape walk_in].freeze
 
       # ------------------------------------------------------------- exports
       CUTLIST_COLUMNS = %w[unit part material length_mm width_mm thickness_mm

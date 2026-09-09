@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 #
 # AHW Kitchen & Dressing  —  parametric cabinetry for SketchUp
-# AHW Architects Master  |  https://github.com/mhwardany
+# AHW Architects Masr  |  https://ahwspaces.com
+# Developed by Mahmoud Al wardany  |  تطوير: محمود الوردانى
 #
 # Registration file. Keep this file and the ahw_kd/ folder together inside
 # the SketchUp Plugins directory.
@@ -13,7 +14,11 @@ module AHW
   module KD
     PLUGIN_NAME    = 'AHW Kitchen & Dressing'
     PLUGIN_ID      = 'ahw_kd'
-    PLUGIN_VERSION = '1.1.0'
+    PLUGIN_VERSION = '1.2.0'
+    PLUGIN_COMPANY = 'AHW Architects Masr'
+    PLUGIN_AUTHOR  = 'Mahmoud Al wardany'
+    PLUGIN_AUTHOR_AR = 'محمود الوردانى'
+    PLUGIN_WEBSITE = 'https://ahwspaces.com'
 
     PATH_ROOT = File.dirname(__FILE__).freeze
     PATH_LIB  = File.join(PATH_ROOT, 'ahw_kd').freeze
@@ -23,11 +28,12 @@ module AHW
     unless file_loaded?(__FILE__)
       ext = SketchupExtension.new(PLUGIN_NAME, File.join(PATH_LIB, 'main'))
       ext.version     = PLUGIN_VERSION
-      ext.creator     = 'AHW Architects Master'
-      ext.copyright   = "#{Time.now.year} AHW Architects Master"
-      ext.description = 'Parametric kitchen, bathroom vanity and dressing/wardrobe ' \
-                        'units with full carcass, fronts, hardware, worktops, ' \
-                        'appliance slots, cut list and BOQ export.'
+      ext.creator     = "#{PLUGIN_COMPANY} — #{PLUGIN_AUTHOR}"
+      ext.copyright   = "#{Time.now.year} #{PLUGIN_COMPANY} · #{PLUGIN_WEBSITE}"
+      ext.description = 'Parametric kitchen, bathroom vanity and dressing / ' \
+                        'wardrobe units: carcass, fronts, hardware, worktops, ' \
+                        'appliance slots, project pricing, cut list with sheet ' \
+                        "nesting and BOQ. Developed by #{PLUGIN_AUTHOR} — #{PLUGIN_WEBSITE}"
       Sketchup.register_extension(ext, true)
       file_loaded(__FILE__)
     end
